@@ -3,6 +3,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: minio-pvc-longhorn
   namespace: {{.Values.namespace}}
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
 spec:
   accessModes:
     - ReadWriteOnce
