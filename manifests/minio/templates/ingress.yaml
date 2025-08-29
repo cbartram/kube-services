@@ -20,7 +20,31 @@ spec:
         - minio-kraken.duckdns.org
         - minio-kraken-console.duckdns.org
       secretName: minio-tls
+    - hosts:
+        - minio.kraken-plugins.com
+        - minio-console.kraken-plugins.com
+      secretName: minio-kraken-plugins-tls
   rules:
+    - host: minio-console.kraken-plugins.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: minio-svc
+                port:
+                  number: 9090
+            path: /
+            pathType: Prefix
+    - host: minio.kraken-plugins.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: minio-svc
+                port:
+                  number: 9000
+            path: /
+            pathType: Prefix
     - host: minio-kraken-console.duckdns.org
       http:
         paths:
