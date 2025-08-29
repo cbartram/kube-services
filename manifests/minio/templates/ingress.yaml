@@ -32,7 +32,7 @@ spec:
               service:
                 name: minio-svc
                 port:
-                  number: 9090
+                  number: {{.Values.service.consolePort}}
             path: /
             pathType: Prefix
     - host: minio.kraken-plugins.com
@@ -42,7 +42,7 @@ spec:
               service:
                 name: minio-svc
                 port:
-                  number: 9000
+                  number: {{.Values.service.apiPort}}
             path: /
             pathType: Prefix
     - host: minio-kraken-console.duckdns.org
@@ -52,7 +52,7 @@ spec:
               service:
                 name: minio-svc
                 port:
-                  number: 9090
+                  number: {{.Values.service.consolePort}}
             path: /
             pathType: Prefix
     - host: minio-kraken.duckdns.org
@@ -62,6 +62,6 @@ spec:
               service:
                 name: minio-svc
                 port:
-                  number: 9000
+                  number: {{.Values.service.apiPort}}
             path: /
             pathType: Prefix
