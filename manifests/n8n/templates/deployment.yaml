@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: {{.Values.namespace}}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.labels | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- toYaml .Values.labels | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "America/New_York"
+            - name: GENERIC_TIMEZONE
+              value: "America/New_York"
+            - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+              value: "true"
+            - name: N8N_RUNNERS_ENABLED
+              value: "true"
+            - name: QUEUE_HEALTH_CHECK_ACTIVE
+              value: "true"
+{{/*          livenessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /healthz*/}}
+{{/*              port: {{.Values.service.port}}*/}}
+{{/*          readinessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /healthz*/}}
+{{/*              port: {{.Values.service.port}}*/}}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

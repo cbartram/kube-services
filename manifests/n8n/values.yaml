@@ -1,0 +1,23 @@
+namespace: n8n
+replicaCount: 1
+
+image:
+  repository: docker.n8n.io/n8nio/n8n
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+labels:
+  app: n8n
+
+service:
+  type: ClusterIP
+  port: 5678
+  protocol: TCP
+
+resources:
+   limits:
+     cpu: 200m
+     memory: 512Mi
+   requests:
+     cpu: 200m
+     memory: 512Mi
