@@ -1,0 +1,299 @@
+{
+  "name": "Service Health Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "38fa814a-bcf1-42c9-8736-5448b4ae7582",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://kraken-plugins.com",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "b697bfde-fa61-495c-a051-35c497cc5b5c",
+      "name": "Check Main Site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -528,
+        -48
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "http://kraken-api.kraken.svc.cluster.local:80/api/v1/health",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "3a5e4fe3-4ffa-4630-8600-d24cbfa55ed9",
+      "name": "Check API Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -528,
+        128
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://minio-console.kraken-plugins.com",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "bdf13af3-af8a-44d0-9328-70e9825ca50a",
+      "name": "Check Minio Console",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -512,
+        320
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst items = $input.all();\n\n// Helper function to extract status info\nconst getStatusInfo = (item) => {\n  // Check if we have error information\n  console.log(item)\n  if (item.json.error) {\n    return {\n      statusCode: null,\n      error: item.json.error,\n      body: null\n    };\n  }\n  \n  // Handle full response format\n  if (item.json.statusCode) {\n    return {\n      statusCode: item.json.statusCode,\n      error: null,\n      body: item.json.body\n    };\n  }\n  \n  // Fallback\n  return {\n    statusCode: null,\n    error: { message: 'Unknown response format' },\n    body: null\n  };\n};\n\n// Check Main Site\nconst mainSiteInfo = getStatusInfo(items[0]);\nconst mainSiteStatus = {\n  service: 'Main Website',\n  url: 'https://kraken-plugins.com',\n  status: 'healthy',\n  statusCode: mainSiteInfo.statusCode || 'N/A',\n  message: 'Site is accessible',\n  icon: '✅'\n};\n\nif (mainSiteInfo.error || !mainSiteInfo.statusCode || mainSiteInfo.statusCode >= 400) {\n  mainSiteStatus.status = 'down';\n  mainSiteStatus.message = mainSiteInfo.error?.message || `HTTP ${mainSiteInfo.statusCode}`;\n  mainSiteStatus.icon = '❌';\n}\n\nresults.push(mainSiteStatus);\n\n// Check API Health\nconst apiInfo = getStatusInfo(items[1]);\nconst apiStatus = {\n  service: 'Kraken API',\n  url: 'http://kraken-api.kraken.svc.cluster.local:80/api/v1/health',\n  status: 'healthy',\n  statusCode: apiInfo.statusCode || 'N/A',\n  message: 'API is healthy',\n  icon: '✅'\n};\n\nif (apiInfo.error || !apiInfo.statusCode || apiInfo.statusCode >= 400) {\n  apiStatus.status = 'down';\n  apiStatus.message = apiInfo.error?.message || `HTTP ${apiInfo.statusCode}`;\n  apiStatus.icon = '❌';\n}\n\nresults.push(apiStatus);\n\n// Check Minio Console\nconst minioInfo = getStatusInfo(items[2]);\nconst minioStatus = {\n  service: 'Minio Console',\n  url: 'https://minio-console.kraken-plugins.com',\n  status: 'healthy',\n  statusCode: minioInfo.statusCode || 'N/A',\n  message: 'Console is accessible',\n  icon: '✅'\n};\n\nif (minioInfo.error || !minioInfo.statusCode || minioInfo.statusCode >= 400) {\n  minioStatus.status = 'down';\n  minioStatus.message = minioInfo.error?.message || `HTTP ${minioInfo.statusCode}`;\n  minioStatus.icon = '❌';\n}\n\nresults.push(minioStatus);\n\n// Check if any service has issues\nconst hasIssues = results.some(r => r.status !== 'healthy');\nconst timestamp = new Date().toLocaleString('en-US', { \n  timeZone: 'America/New_York',\n  dateStyle: 'full',\n  timeStyle: 'long'\n});\n\nreturn {\n  json: {\n    results,\n    hasIssues,\n    timestamp,\n    summary: {\n      total: results.length,\n      healthy: results.filter(r => r.status === 'healthy').length,\n      down: results.filter(r => r.status === 'down').length,\n      warning: results.filter(r => r.status === 'warning').length\n    }\n  }\n};"
+      },
+      "id": "9140ce7e-ebec-46e4-b535-f85af74625af",
+      "name": "Process Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.hasIssues }}",
+              "value2": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "223c5655-4b56-4f41-a1bc-43d7248cf8b5",
+      "name": "Has Issues?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        128,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst { results, timestamp, summary } = data;\n\nconst statusColor = (status) => {\n  if (status === 'healthy') return '#28a745';\n  if (status === 'warning') return '#ffc107';\n  return '#dc3545';\n};\n\nconst serviceRows = results.map(r => `\n  <tr style=\"border-bottom: 1px solid #e9ecef;\">\n    <td style=\"padding: 16px; font-size: 24px;\">${r.icon}</td>\n    <td style=\"padding: 16px;\">\n      <strong style=\"color: #212529; font-size: 16px;\">${r.service}</strong><br>\n      <span style=\"color: #6c757d; font-size: 14px;\">${r.url}</span>\n    </td>\n    <td style=\"padding: 16px; text-align: center;\">\n      <span style=\"\n        background-color: ${statusColor(r.status)};\n        color: white;\n        padding: 6px 12px;\n        border-radius: 4px;\n        font-weight: 600;\n        font-size: 14px;\n        text-transform: uppercase;\n      \">${r.status}</span>\n    </td>\n    <td style=\"padding: 16px; text-align: center; color: #6c757d; font-size: 14px;\">${r.statusCode}</td>\n    <td style=\"padding: 16px; color: #495057; font-size: 14px;\">${r.message}</td>\n  </tr>\n`).join('');\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa;\">\n  <div style=\"max-width: 800px; margin: 40px auto; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;\">\n    \n    <!-- Header -->\n    <div style=\"background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px; text-align: center;\">\n      <h1 style=\"margin: 0; color: white; font-size: 28px; font-weight: 700;\">⚠️ Service Health Alert</h1>\n      <p style=\"margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;\">Issues detected with your services</p>\n    </div>\n    \n    <!-- Summary Stats -->\n    <div style=\"display: flex; padding: 24px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;\">\n      <div style=\"flex: 1; text-align: center; padding: 12px;\">\n        <div style=\"font-size: 32px; font-weight: 700; color: #28a745;\">${summary.healthy}</div>\n        <div style=\"font-size: 14px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px;\">Healthy</div>\n      </div>\n      <div style=\"flex: 1; text-align: center; padding: 12px;\">\n        <div style=\"font-size: 32px; font-weight: 700; color: #ffc107;\">${summary.warning}</div>\n        <div style=\"font-size: 14px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px;\">Warning</div>\n      </div>\n      <div style=\"flex: 1; text-align: center; padding: 12px;\">\n        <div style=\"font-size: 32px; font-weight: 700; color: #dc3545;\">${summary.down}</div>\n        <div style=\"font-size: 14px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px;\">Down</div>\n      </div>\n    </div>\n    \n    <!-- Services Table -->\n    <div style=\"padding: 24px;\">\n      <h2 style=\"margin: 0 0 16px 0; color: #212529; font-size: 20px; font-weight: 600;\">Service Status Details</h2>\n      <table style=\"width: 100%; border-collapse: collapse; background-color: white;\">\n        <thead>\n          <tr style=\"background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;\">\n            <th style=\"padding: 12px; text-align: left; color: #495057; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;\"></th>\n            <th style=\"padding: 12px; text-align: left; color: #495057; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;\">Service</th>\n            <th style=\"padding: 12px; text-align: center; color: #495057; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;\">Status</th>\n            <th style=\"padding: 12px; text-align: center; color: #495057; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;\">Code</th>\n            <th style=\"padding: 12px; text-align: left; color: #495057; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;\">Details</th>\n          </tr>\n        </thead>\n        <tbody>\n          ${serviceRows}\n        </tbody>\n      </table>\n    </div>\n    \n    <!-- Footer -->\n    <div style=\"padding: 24px; background-color: #f8f9fa; border-top: 1px solid #dee2e6; text-align: center;\">\n      <p style=\"margin: 0; color: #6c757d; font-size: 14px;\">\n        <strong>Checked at:</strong> ${timestamp}\n      </p>\n      <p style=\"margin: 12px 0 0 0; color: #6c757d; font-size: 12px;\">\n        This is an automated alert from your N8N Service Monitor\n      </p>\n    </div>\n    \n  </div>\n</body>\n</html>\n`;\n\nreturn {\n  json: {\n    html,\n    subject: `🚨 Service Alert: ${summary.down} Down, ${summary.warning} Warning`,\n    summary\n  }\n};"
+      },
+      "id": "94a08cf0-cefa-41a8-8b4d-adc0ccd56e2b",
+      "name": "Generate HTML Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "cbartram3@gmail.com",
+        "toEmail": "cbartram3@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "d9609f3d-9c29-4a5e-9b5f-29c6e8aaa3c5",
+      "name": "Send Email Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        528,
+        80
+      ],
+      "webhookId": "a99ce61b-4a21-4db6-b0f0-07d0abc188d0",
+      "credentials": {
+        "smtp": {
+          "id": "ULjeenaDD1as2gN4",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -256,
+        96
+      ],
+      "id": "09be6c1c-d1c0-4d25-93fd-f9fd00edf987",
+      "name": "Merge"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check Main Site",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check API Health",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check Minio Console",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Main Site": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check API Health": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check Minio Console": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Process Results": {
+      "main": [
+        [
+          {
+            "node": "Has Issues?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Issues?": {
+      "main": [
+        [
+          {
+            "node": "Generate HTML Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate HTML Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Process Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "71359c38-3aad-494b-b33f-02d109b21810",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "24ff4fa36e309b30ff5321df46353854680cd8881f1c65cf8a0c8cd4d662f962"
+  },
+  "id": "5QE5WbipeQNwDxRe",
+  "tags": []
+}
