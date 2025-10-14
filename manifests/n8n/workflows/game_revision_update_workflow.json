@@ -1,0 +1,548 @@
+{
+  "name": "OSRS Update Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "039e1d2b-7787-4ce2-babb-8801cd5e2adb",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1216,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://static.runelite.net/bootstrap.json",
+        "options": {}
+      },
+      "id": "8781f941-46da-4511-9140-decfa32171af",
+      "name": "Fetch RuneLite Version",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -864,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://archive.openrs2.org/caches.json",
+        "options": {}
+      },
+      "id": "59cdda36-8f56-4c14-9d34-55ea7a5acb36",
+      "name": "Fetch OSRS Cache",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -864,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('client-'));\nconst version = clientArtifact.name.match(/client-(\\d+\\.\\d+\\.\\d+)\\.jar/)[1];\n\nreturn {\n  version: version,\n  artifact: clientArtifact.name,\n  hash: clientArtifact.hash,\n  size: clientArtifact.size,\n  path: clientArtifact.path\n};"
+      },
+      "id": "4b51475e-c3ff-401a-8ce7-56e47cd9de0c",
+      "name": "Parse RuneLite Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter for oldschool and get latest version\nconst caches = $input.all();\nlet sortedCaches = caches\n  .filter(c => c.json.game === 'oldschool')\n  .sort((a,b) => new Date(b.json.timestamp) - new Date(a.json.timestamp));\n\nconst latest = sortedCaches[0];\n\nreturn {\n  major: latest.json.builds[0].major,\n  minor: latest.json.builds[0].minor,\n  timestamp: latest.json.timestamp,\n  id: latest.json.id\n};"
+      },
+      "id": "a3208d18-5d4e-4a00-b657-3a2e1282ec00",
+      "name": "Parse OSRS Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "=previous_version",
+        "key": "runelite_version",
+        "keyType": "string",
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "ed5bd949-2ae9-48ba-9921-e723fc7201ce",
+      "name": "Load Previous RuneLite Version",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        -80
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "redis": {
+          "id": "zCGkBiCIjCXGrmB0",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "=previous_revision",
+        "key": "osrs_revision",
+        "options": {
+          "dotNotation": true
+        }
+      },
+      "id": "d1511dcc-f2ba-44d7-9dc2-924f07869a58",
+      "name": "Load Previous OSRS Version",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        352
+      ],
+      "credentials": {
+        "redis": {
+          "id": "zCGkBiCIjCXGrmB0",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.previous_version }}",
+              "rightValue": "={{ $json.version }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "id": "942bee2d-32e0-4b14-bf51-286fc3e7140a"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8fe98b6e-09d6-43b8-9b13-c964a95399e1",
+      "name": "RuneLite Version Changed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.major }}",
+              "rightValue": "={{ parseInt($json.previous_revision) }}",
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              },
+              "id": "285ba29f-2d63-49ef-92bc-9199528006e2"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7ce6e252-56c8-480f-829c-ffa04bdd59da",
+      "name": "OSRS Version Changed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "cbartram3@gmail.com",
+        "toEmail": "cbartram3@gmail.com",
+        "subject": "=🎮 RuneLite Update - v{{ $json.version }}",
+        "html": "=<!DOCTYPE html><html><head>  <style>    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }    .container { background-color: white; border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; margin: -30px -30px 20px -30px; }    .version { font-size: 32px; font-weight: bold; margin: 10px 0; }    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }    .info-item { background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea; }    .label { font-size: 12px; color: #666; text-transform: uppercase; font-weight: bold; }    .value { font-size: 18px; color: #333; margin-top: 5px; }    .download-btn { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 20px; }    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center; }  </style></head><body>  <div class=\\\"container\\\">    <div class=\\\"header\\\">      <h1 style=\\\"margin: 0;\\\">🎮 RuneLite Update</h1>      <div class=\\\"version\\\">v{{ $json.version }}</div>    </div>        <p>A new RuneLite version has been released and is now available for download.</p>        <div class=\\\"info-grid\\\">      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Version</div>        <div class=\\\"value\\\">{{ $json.version }}</div>      </div>      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Artifact</div>        <div class=\\\"value\\\">{{ $json.artifact }}</div>      </div>      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Size</div>        <div class=\\\"value\\\">{{ ($json.size / 1024 / 1024).toFixed(2) }} MB</div>      </div>      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Hash (SHA-256)</div>        <div class=\\\"value\\\" style=\\\"font-size: 10px; word-break: break-all;\\\">{{ $json.hash }}</div>      </div>    </div>        <a href=\\\"{{ $json.path }}\\\" class=\\\"download-btn\\\">Download Update</a>        <div class=\\\"footer\\\">      Automated notification from RuneLite Update Monitor<br>      {{ new Date().toLocaleString() }}    </div>  </div></body></html>",
+        "options": {}
+      },
+      "id": "1ac7f1bd-adab-40ae-bc63-5539cda1c0b0",
+      "name": "Email - RuneLite Update",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -64
+      ],
+      "webhookId": "948e9550-1b1c-479b-b234-3e9a4916e407",
+      "credentials": {
+        "smtp": {
+          "id": "ULjeenaDD1as2gN4",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "cbartram3@gmail.com",
+        "toEmail": "cbartram3@gmail.com",
+        "subject": "=🗡️ OSRS Game Update - Build {{ $json.major }}",
+        "html": "=<!DOCTYPE html><html><head>  <style>    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }    .container { background-color: white; border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }    .header { background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; margin: -30px -30px 20px -30px; }    .version { font-size: 32px; font-weight: bold; margin: 10px 0; }    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }    .info-item { background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; }    .label { font-size: 12px; color: #666; text-transform: uppercase; font-weight: bold; }    .value { font-size: 18px; color: #333; margin-top: 5px; }    .timestamp { background: #fef3c7; padding: 12px; border-radius: 6px; margin: 20px 0; text-align: center; }    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center; }  </style></head><body>  <div class=\\\"container\\\">    <div class=\\\"header\\\">      <h1 style=\\\"margin: 0;\\\">🗡️ Old School RuneScape</h1>      <div class=\\\"version\\\">Build {{ $json.major }}</div>    </div>        <p>A new OSRS game cache has been published on the OpenRS2 Archive.</p>        <div class=\\\"timestamp\\\">      <strong>Released:</strong> {{ new Date($json.timestamp).toLocaleString() }}    </div>        <div class=\\\"info-grid\\\">      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Major Build</div>        <div class=\\\"value\\\">{{ $json.major }}</div>      </div>      <div class=\\\"info-item\\\"><div class=\\\"footer\\\">      Automated notification from OSRS Update Monitor<br>      {{ new Date().toLocaleString() }}    </div>  </div></body></html>",
+        "options": {}
+      },
+      "id": "b485bf9a-cff5-45f2-ac7d-b0cb5eb32d4e",
+      "name": "Email - OSRS Update",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        384,
+        608
+      ],
+      "webhookId": "6233e2e7-f4cf-4776-8119-66b1d91d4269",
+      "credentials": {
+        "smtp": {
+          "id": "ULjeenaDD1as2gN4",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "runelite_version",
+        "value": "={{ $json.version }}",
+        "keyType": "string"
+      },
+      "id": "208ab34f-53b9-49fd-a006-5fbaef759a7e",
+      "name": "Save RuneLite Version",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        48,
+        112
+      ],
+      "credentials": {
+        "redis": {
+          "id": "zCGkBiCIjCXGrmB0",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "osrs_revision",
+        "value": "={{ $json.major }}",
+        "keyType": "string"
+      },
+      "id": "09ef582e-aa64-4900-8303-68fdc2f6de8a",
+      "name": "Save OSRS Version",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        384,
+        272
+      ],
+      "credentials": {
+        "redis": {
+          "id": "zCGkBiCIjCXGrmB0",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -416,
+        0
+      ],
+      "id": "28f47181-4883-400a-93ce-7f1e6cd436fc",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -384,
+        400
+      ],
+      "id": "5aa875ef-31b4-4767-89e3-bd77f5ad5607",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=📢 **OSRS Revision Update:** `{{ $json.previous_revision }}` ➜ `{{ $json.major }}`\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        384,
+        432
+      ],
+      "id": "c407bde2-0287-4373-a972-f57a9b1db367",
+      "name": "Discord",
+      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
+      "alwaysOutputData": false,
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "unuZKgBH1vE1csUB",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=📢 **RuneLite Update:** `{{ $json.previous_version }}` ➜ `{{ $json.version }}`\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -240
+      ],
+      "id": "378dcd29-a191-4cf9-b3a9-0230f0d07b54",
+      "name": "Discord1",
+      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
+      "alwaysOutputData": false,
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "unuZKgBH1vE1csUB",
+          "name": "Discord Webhook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch RuneLite Version",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch OSRS Cache",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Load Previous OSRS Version",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Load Previous RuneLite Version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch RuneLite Version": {
+      "main": [
+        [
+          {
+            "node": "Parse RuneLite Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch OSRS Cache": {
+      "main": [
+        [
+          {
+            "node": "Parse OSRS Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse RuneLite Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Parse OSRS Data": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Load Previous RuneLite Version": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Previous OSRS Version": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RuneLite Version Changed?": {
+      "main": [
+        [
+          {
+            "node": "Email - RuneLite Update",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save RuneLite Version",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Discord1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OSRS Version Changed?": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email - OSRS Update",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save OSRS Version",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email - RuneLite Update": {
+      "main": [
+        []
+      ]
+    },
+    "Email - OSRS Update": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "RuneLite Version Changed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "OSRS Version Changed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a2eeb2a7-e914-4767-af94-637c8002d2ce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "24ff4fa36e309b30ff5321df46353854680cd8881f1c65cf8a0c8cd4d662f962"
+  },
+  "id": "GIVXgpTk0uidsko0",
+  "tags": []
+}
