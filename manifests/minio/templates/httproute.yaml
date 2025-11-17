@@ -1,0 +1,47 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: minio-api-route
+  namespace: minio
+spec:
+  parentRefs:
+    - name: kraken-gateway
+      namespace: kraken
+      sectionName: minio-https
+  hostnames:
+    - "minio.kraken-plugins.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      timeouts:
+        request: "3600s"
+        backendRequest: "3600s"
+      backendRefs:
+        - name: minio-svc
+          port: {{.Values.service.apiPort}}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: minio-console-route
+  namespace: minio
+spec:
+  parentRefs:
+    - name: kraken-gateway
+      namespace: kraken
+      sectionName: minio-console-https
+  hostnames:
+    - "minio-console.kraken-plugins.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      timeouts:
+        request: "3600s"
+        backendRequest: "3600s"
+      backendRefs:
+        - name: minio-svc
+          port: {{.Values.service.consolePort}}

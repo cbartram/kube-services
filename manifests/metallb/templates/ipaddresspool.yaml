@@ -1,0 +1,8 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lan-pool
+  namespace: {{.Values.namespace}}
+spec:
+  addresses:
+    - {{.Values.addressStart}}-{{.Values.addressEnd}}

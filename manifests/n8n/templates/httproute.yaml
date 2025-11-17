@@ -1,0 +1,23 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: n8n-route
+  namespace: n8n
+spec:
+  parentRefs:
+    - name: kraken-gateway
+      namespace: kraken
+      sectionName: n8n-https
+  hostnames:
+    - "n8n.kraken-plugins.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      timeouts:
+        request: "3600s"
+        backendRequest: "3600s"
+      backendRefs:
+        - name: n8n-service
+          port: 5678
