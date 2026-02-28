@@ -33,13 +33,5 @@ spec:
               value: "true"
             - name: QUEUE_HEALTH_CHECK_ACTIVE
               value: "true"
-{{/*          livenessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /healthz*/}}
-{{/*              port: {{.Values.service.port}}*/}}
-{{/*          readinessProbe:*/}}
-{{/*            httpGet:*/}}
-{{/*              path: /healthz*/}}
-{{/*              port: {{.Values.service.port}}*/}}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
