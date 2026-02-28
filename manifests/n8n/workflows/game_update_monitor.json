@@ -6,19 +6,18 @@
         "rule": {
           "interval": [
             {
-              "field": "minutes",
-              "minutesInterval": 15
+              "field": "hours"
             }
           ]
         }
       },
-      "id": "c9425761-4e61-4f26-84f0-7758102ce694",
+      "id": "7944a78e-a395-4e78-ac49-79226cab949c",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -1264,
-        448
+        -1808,
+        64
       ]
     },
     {
@@ -26,13 +25,13 @@
         "url": "https://static.runelite.net/bootstrap.json",
         "options": {}
       },
-      "id": "76683b1f-a35c-4349-a9c8-495e7a5adcdb",
+      "id": "7359e185-62a9-446d-9355-ab5936992cce",
       "name": "Fetch RuneLite Version",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -912,
-        368
+        -1456,
+        -16
       ]
     },
     {
@@ -40,39 +39,39 @@
         "url": "https://archive.openrs2.org/caches.json",
         "options": {}
       },
-      "id": "e0251d81-365e-4317-95be-bf22763f92ae",
+      "id": "0fb9f8a5-4084-4bc8-9262-920f614e59c7",
       "name": "Fetch OSRS Cache",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -912,
-        800
+        -1456,
+        416
       ]
     },
     {
       "parameters": {
         "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\n\n// Find the artifact that starts with 'client-'\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('client-'));\n\n// Ensure the artifact was found before proceeding\nif (!clientArtifact) {\n    throw new Error(\"Could not find an artifact starting with 'client-'. Check the input data structure.\");\n}\n\nconsole.log(\"Found artifact: \", clientArtifact.name)\n\n// 💡 The new, simplified version extraction:\n// 1. Start by getting the name: \"client-1.12.5.2.jar\"\nlet version = clientArtifact.name;\n\n// 2. Remove the \"client-\" prefix\nversion = version.replace('client-', ''); \n\n// 3. Remove the \".jar\" suffix\nversion = version.replace('.jar', ''); \n\n// The result is just the version string (e.g., \"1.12.5.2\" or \"1.12.5\")\n\nconsole.log(\"Parsed version: \", version)\nreturn {\n  version: version,\n  artifact: clientArtifact.name,\n  hash: clientArtifact.hash,\n  size: clientArtifact.size,\n  path: clientArtifact.path\n};"
       },
-      "id": "9d1e9e22-a3d3-4ae8-b440-9f97b88ef31c",
+      "id": "f25eadfa-5c76-4191-bd24-ed13521fa1c8",
       "name": "Parse RuneLite Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -688,
-        368
+        -1232,
+        -16
       ]
     },
     {
       "parameters": {
         "jsCode": "// Filter for oldschool and get latest version\nconst caches = $input.all();\nlet sortedCaches = caches\n  .filter(c => c.json.game === 'oldschool')\n  .sort((a,b) => new Date(b.json.timestamp) - new Date(a.json.timestamp));\n\nconst latest = sortedCaches[0];\n\nreturn {\n  major: latest.json.builds[0].major,\n  minor: latest.json.builds[0].minor,\n  timestamp: latest.json.timestamp,\n  id: latest.json.id\n};"
       },
-      "id": "5630e937-28cf-4a6b-a11c-15bf6ec86be1",
+      "id": "74a24a98-34cb-4ad9-8099-18348e577743",
       "name": "Parse OSRS Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -640,
-        768
+        -1184,
+        384
       ]
     },
     {
@@ -85,18 +84,18 @@
           "dotNotation": true
         }
       },
-      "id": "d2e00a9a-074a-4b0b-b6d4-07586e2146ce",
+      "id": "85016f67-b70c-4e0c-8ecf-ef3822d1b744",
       "name": "Load Previous RuneLite Version",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -912,
-        160
+        -1456,
+        -224
       ],
       "alwaysOutputData": false,
       "credentials": {
         "redis": {
-          "id": "0NSO1h8LU9eLTDnB",
+          "id": "mTMF95BvH7yOJa4L",
           "name": "Redis account"
         }
       }
@@ -110,17 +109,17 @@
           "dotNotation": true
         }
       },
-      "id": "b9afd4d6-4c6f-4da6-ae73-8c509525b37e",
+      "id": "64790cd7-61e6-4223-8665-8d4e7d47c731",
       "name": "Load Previous OSRS Version",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -912,
-        592
+        -1456,
+        208
       ],
       "credentials": {
         "redis": {
-          "id": "0NSO1h8LU9eLTDnB",
+          "id": "mTMF95BvH7yOJa4L",
           "name": "Redis account"
         }
       }
@@ -149,13 +148,13 @@
         },
         "options": {}
       },
-      "id": "fb68789e-1bc3-4d41-b2ef-b11e74213a19",
+      "id": "bc594b97-b99c-4aa5-ad34-4da906b42988",
       "name": "RuneLite Version Changed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -272,
-        240
+        -816,
+        -144
       ]
     },
     {
@@ -182,13 +181,13 @@
         },
         "options": {}
       },
-      "id": "91fcaf99-713e-4a70-93c8-bb38cbab6f61",
+      "id": "1fe98e88-fa62-4c51-8e61-8e99b53b4fb0",
       "name": "OSRS Version Changed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -256,
-        640
+        -800,
+        256
       ]
     },
     {
@@ -199,18 +198,18 @@
         "html": "=<!DOCTYPE html><html><head>  <style>    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }    .container { background-color: white; border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; margin: -30px -30px 20px -30px; }    .version { font-size: 32px; font-weight: bold; margin: 10px 0; }    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }    .info-item { background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea; }    .label { font-size: 12px; color: #666; text-transform: uppercase; font-weight: bold; }    .value { font-size: 18px; color: #333; margin-top: 5px; }    .download-btn { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin-top: 20px; }    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center; }  </style></head><body>  <div class=\\\"container\\\">    <div class=\\\"header\\\">      <h1 style=\\\"margin: 0;\\\">🎮 RuneLite Update</h1>      <div class=\\\"version\\\">v{{ $json.version }}</div>    </div>        <p>A new RuneLite version has been released and is now available for download.</p>        <div class=\\\"info-grid\\\">      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Version</div>        <div class=\\\"value\\\">{{ $json.version }}</div>      </div>      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Artifact</div>        <div class=\\\"value\\\">{{ $json.artifact }}</div>      </div>      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Size</div>        <div class=\\\"value\\\">{{ ($json.size / 1024 / 1024).toFixed(2) }} MB</div>      </div>      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Hash (SHA-256)</div>        <div class=\\\"value\\\" style=\\\"font-size: 10px; word-break: break-all;\\\">{{ $json.hash }}</div>      </div>    </div>        <a href=\\\"{{ $json.path }}\\\" class=\\\"download-btn\\\">Download Update</a>        <div class=\\\"footer\\\">      Automated notification from RuneLite Update Monitor<br>      {{ new Date().toLocaleString() }}    </div>  </div></body></html>",
         "options": {}
       },
-      "id": "321e62e8-653a-45a4-979d-fc3a81363497",
+      "id": "64e71f7f-b18d-44c1-8fa9-31de9b5b4621",
       "name": "Email - RuneLite Update",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        0,
-        176
+        -544,
+        -208
       ],
       "webhookId": "948e9550-1b1c-479b-b234-3e9a4916e407",
       "credentials": {
         "smtp": {
-          "id": "OFfjSj79KNiK0V7c",
+          "id": "HgyZHgRsjnWfpuxd",
           "name": "SMTP account"
         }
       }
@@ -223,18 +222,18 @@
         "html": "=<!DOCTYPE html><html><head>  <style>    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }    .container { background-color: white; border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }    .header { background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; margin: -30px -30px 20px -30px; }    .version { font-size: 32px; font-weight: bold; margin: 10px 0; }    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }    .info-item { background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #f59e0b; }    .label { font-size: 12px; color: #666; text-transform: uppercase; font-weight: bold; }    .value { font-size: 18px; color: #333; margin-top: 5px; }    .timestamp { background: #fef3c7; padding: 12px; border-radius: 6px; margin: 20px 0; text-align: center; }    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center; }  </style></head><body>  <div class=\\\"container\\\">    <div class=\\\"header\\\">      <h1 style=\\\"margin: 0;\\\">🗡️ Old School RuneScape</h1>      <div class=\\\"version\\\">Build {{ $json.major }}</div>    </div>        <p>A new OSRS game cache has been published on the OpenRS2 Archive.</p>        <div class=\\\"timestamp\\\">      <strong>Released:</strong> {{ new Date($json.timestamp).toLocaleString() }}    </div>        <div class=\\\"info-grid\\\">      <div class=\\\"info-item\\\">        <div class=\\\"label\\\">Major Build</div>        <div class=\\\"value\\\">{{ $json.major }}</div>      </div>      <div class=\\\"info-item\\\"><div class=\\\"footer\\\">      Automated notification from OSRS Update Monitor<br>      {{ new Date().toLocaleString() }}    </div>  </div></body></html>",
         "options": {}
       },
-      "id": "9ffa808f-1860-403a-87b4-7d5d890cd0b4",
+      "id": "bba2ac8d-a451-4eb6-9065-5fce523a7f17",
       "name": "Email - OSRS Update",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        336,
-        848
+        -208,
+        464
       ],
       "webhookId": "6233e2e7-f4cf-4776-8119-66b1d91d4269",
       "credentials": {
         "smtp": {
-          "id": "OFfjSj79KNiK0V7c",
+          "id": "HgyZHgRsjnWfpuxd",
           "name": "SMTP account"
         }
       }
@@ -246,17 +245,17 @@
         "value": "={{ $json.version }}",
         "keyType": "string"
       },
-      "id": "e87a605d-3258-4b82-8122-5a874027ba08",
+      "id": "8f8ca006-f68d-421e-ae55-aa5bdb509c95",
       "name": "Save RuneLite Version",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        0,
-        352
+        -544,
+        -32
       ],
       "credentials": {
         "redis": {
-          "id": "0NSO1h8LU9eLTDnB",
+          "id": "mTMF95BvH7yOJa4L",
           "name": "Redis account"
         }
       }
@@ -268,17 +267,17 @@
         "value": "={{ $json.major }}",
         "keyType": "string"
       },
-      "id": "d7ceac89-c30c-4771-80b6-d39d207ccf25",
+      "id": "62d53831-20f6-435d-9c43-b354c8cc5450",
       "name": "Save OSRS Version",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        336,
-        512
+        -208,
+        128
       ],
       "credentials": {
         "redis": {
-          "id": "0NSO1h8LU9eLTDnB",
+          "id": "mTMF95BvH7yOJa4L",
           "name": "Redis account"
         }
       }
@@ -292,10 +291,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -464,
-        240
+        -1008,
+        -144
       ],
-      "id": "db4d703c-f61f-4615-b189-1e11a0f046c4",
+      "id": "7de4cf0f-0834-4313-9844-702a9bc60218",
       "name": "Merge"
     },
     {
@@ -307,10 +306,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -432,
-        640
+        -976,
+        256
       ],
-      "id": "4884ab1c-2be1-4458-9070-5a028ce9f087",
+      "id": "c37968a2-c2f9-4475-a39c-92703e6b2284",
       "name": "Merge1"
     },
     {
@@ -322,13 +321,19 @@
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
-        336,
-        672
+        -208,
+        288
       ],
-      "id": "40b8f2a4-0604-476c-a7c9-1bd48e6a6983",
+      "id": "0e88ea05-ce69-4292-aeef-51256ed578fc",
       "name": "Discord",
       "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
-      "alwaysOutputData": false
+      "alwaysOutputData": false,
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "2ZmGtQ3nI1vOfhAz",
+          "name": "Discord Webhook account"
+        }
+      }
     },
     {
       "parameters": {
@@ -339,16 +344,16 @@
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
-        0,
-        0
+        -544,
+        -384
       ],
-      "id": "0436c9a2-8a02-4520-84e9-f12dbe142bea",
+      "id": "dd9c28b5-652c-4ca0-abb3-9824e5728d43",
       "name": "Discord1",
       "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
       "alwaysOutputData": false,
       "credentials": {
         "discordWebhookApi": {
-          "id": "EOoJcrv6Z0BP02Ok",
+          "id": "2ZmGtQ3nI1vOfhAz",
           "name": "Discord Webhook account"
         }
       }
@@ -513,14 +518,17 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "versionId": "9b6abc56-4843-408e-b2a4-5ee57fa044fc",
+  "versionId": "e2151b30-a0fa-4cca-8b08-36a85c2e5e4a",
   "meta": {
-    "instanceId": "ac5aafcdfb9ac880141cb32a76e3a3481ae6175ee2bcd23b1a0c161d4970a9e4"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a6505d74b5ee4800cc6da6e38a2423cc29240108992c2c30211146b4adaf0c08"
   },
-  "id": "z0l3JtM3cRKIqkwk",
+  "id": "aPCSXPwjegF3mnfI",
   "tags": []
 }

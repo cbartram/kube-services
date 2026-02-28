@@ -1,0 +1,382 @@
+{
+  "name": "Kraken Client Status",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "799a95ee-f46f-4b93-8255-443a2b7e896e",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1264,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://minio.kraken-plugins.com/kraken-bootstrap-static/bootstrap.json",
+        "options": {}
+      },
+      "id": "b50ebceb-831c-45d6-9cec-4570a3b9e961",
+      "name": "Fetch Kraken Bootstrap",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -912,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\n\n// Find the artifact that starts with 'client-'\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('runelite-api-'));\n\n// Ensure the artifact was found before proceeding\nif (!clientArtifact) {\n    throw new Error(\"Could not find an artifact starting with 'runelite-api-'. Check the input data structure.\");\n}\n\nconsole.log(\"Found artifact: \", clientArtifact.name)\n\n// 💡 The new, simplified version extraction:\n// 1. Start by getting the name: \"runelite-api-1.12.5.2.jar\"\nlet version = clientArtifact.name;\n\n// 2. Remove the \"client-\" prefix\nversion = version.replace('runelite-api-', ''); \n\n// 3. Remove the \".jar\" suffix\nversion = version.replace('.jar', ''); \n\n// The result is just the version string (e.g., \"1.12.5.2\" or \"1.12.5\")\n\nconsole.log(\"Parsed version: \", version)\nreturn {\n  krakenBootstrapRuneLiteVersion: version,\n};"
+      },
+      "id": "04804640-7a46-4865-a743-90a54a3a0e2a",
+      "name": "Parse Kraken Bootstrap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -144,
+        624
+      ],
+      "id": "02ff5195-b1ca-4c8f-950b-2053c27f754b",
+      "name": "Merge RL / Kraken"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cc4ebb29-4940-465c-962f-e1a8fcbb40ac",
+              "leftValue": "={{ $json.current_version }}",
+              "rightValue": "={{ $json.krakenBootstrapRuneLiteVersion }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        624
+      ],
+      "id": "da389d9a-433d-4693-b2a3-19037af51759",
+      "name": "Check Version Divergence"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=📢 **RuneLite Update:** `{{ $json.previous_version }}` ➜ `{{ $json.version }}`\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        336,
+        528
+      ],
+      "id": "7d488675-c1c9-4ff0-9e77-bdfd73189273",
+      "name": "Notify Kraken Offline",
+      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
+      "alwaysOutputData": false,
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "2ZmGtQ3nI1vOfhAz",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=📢 **RuneLite Update:** `{{ $json.previous_version }}` ➜ `{{ $json.version }}`\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        352,
+        752
+      ],
+      "id": "c011ae4c-2794-4593-b53e-2e94ac661339",
+      "name": "Notify Kraken Online",
+      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
+      "alwaysOutputData": false,
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "2ZmGtQ3nI1vOfhAz",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.previous_version }}",
+              "rightValue": "={{ $json.current_version }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "id": "942bee2d-32e0-4b14-bf51-286fc3e7140a"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "29967ef7-7ce4-43c0-8a04-69a3551f1099",
+      "name": "RuneLite Version Changed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        416
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "runelite_version",
+        "value": "={{ $json.current_version }}",
+        "keyType": "string"
+      },
+      "id": "a336d5dc-54fe-4fe7-8839-a5ee78039cda",
+      "name": "Save RuneLite Version",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        96
+      ],
+      "credentials": {
+        "redis": {
+          "id": "mTMF95BvH7yOJa4L",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XEQtHqwDjzx88vzn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/XEQtHqwDjzx88vzn",
+          "cachedResultName": "Get RuneLite Versions"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -912,
+        416
+      ],
+      "name": "Call Get RuneLite Versions",
+      "id": "8551ff1f-6c12-42ae-9f04-484cfb22fa83"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XEQtHqwDjzx88vzn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/XEQtHqwDjzx88vzn",
+          "cachedResultName": "Get RuneLite Versions"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        480
+      ],
+      "name": "Get RuneLite Versions",
+      "id": "2629bbbc-fb5c-4429-b4d1-4ba0aa4e45b5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Kraken Bootstrap",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call Get RuneLite Versions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Kraken Bootstrap": {
+      "main": [
+        [
+          {
+            "node": "Parse Kraken Bootstrap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Kraken Bootstrap": {
+      "main": [
+        [
+          {
+            "node": "Merge RL / Kraken",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge RL / Kraken": {
+      "main": [
+        [
+          {
+            "node": "Check Version Divergence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Version Divergence": {
+      "main": [
+        [
+          {
+            "node": "Notify Kraken Offline",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Kraken Online",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RuneLite Version Changed?": {
+      "main": [
+        [
+          {
+            "node": "Get RuneLite Versions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Call Get RuneLite Versions": {
+      "main": [
+        [
+          {
+            "node": "RuneLite Version Changed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get RuneLite Versions": {
+      "main": [
+        [
+          {
+            "node": "Merge RL / Kraken",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1714382b-60ec-4e49-b61b-b1a654fed36d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a6505d74b5ee4800cc6da6e38a2423cc29240108992c2c30211146b4adaf0c08"
+  },
+  "id": "u8mRjKATTV9EGxZO",
+  "tags": [
+    {
+      "name": "kraken",
+      "id": "YBFKVDcloOzg0bbE",
+      "updatedAt": "2026-02-28T18:30:41.478Z",
+      "createdAt": "2026-02-28T18:30:41.478Z"
+    }
+  ]
+}
