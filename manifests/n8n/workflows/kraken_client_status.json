@@ -1,67 +1,49 @@
 {
-  "name": "Kraken Client Status",
+  "name": "Client Status",
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 15
-            }
-          ]
-        }
-      },
-      "id": "799a95ee-f46f-4b93-8255-443a2b7e896e",
-      "name": "Schedule Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -1264,
-        448
-      ]
-    },
-    {
-      "parameters": {
-        "url": "https://minio.kraken-plugins.com/kraken-bootstrap-static/bootstrap.json",
+        "operation": "get",
+        "key": "kraken_client_state",
+        "keyType": "string",
         "options": {}
       },
-      "id": "b50ebceb-831c-45d6-9cec-4570a3b9e961",
-      "name": "Fetch Kraken Bootstrap",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "id": "f7373b8b-af6c-4c75-8b8f-41eb05acb999",
+      "name": "Get State (Offline Path)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
       "position": [
-        -912,
-        608
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\n\n// Find the artifact that starts with 'client-'\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('runelite-api-'));\n\n// Ensure the artifact was found before proceeding\nif (!clientArtifact) {\n    throw new Error(\"Could not find an artifact starting with 'runelite-api-'. Check the input data structure.\");\n}\n\nconsole.log(\"Found artifact: \", clientArtifact.name)\n\n// 💡 The new, simplified version extraction:\n// 1. Start by getting the name: \"runelite-api-1.12.5.2.jar\"\nlet version = clientArtifact.name;\n\n// 2. Remove the \"client-\" prefix\nversion = version.replace('runelite-api-', ''); \n\n// 3. Remove the \".jar\" suffix\nversion = version.replace('.jar', ''); \n\n// The result is just the version string (e.g., \"1.12.5.2\" or \"1.12.5\")\n\nconsole.log(\"Parsed version: \", version)\nreturn {\n  krakenBootstrapRuneLiteVersion: version,\n};"
-      },
-      "id": "04804640-7a46-4865-a743-90a54a3a0e2a",
-      "name": "Parse Kraken Bootstrap",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -672,
-        608
-      ]
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        -144,
-        624
+        -176,
+        400
       ],
-      "id": "02ff5195-b1ca-4c8f-950b-2053c27f754b",
-      "name": "Merge RL / Kraken"
+      "credentials": {
+        "redis": {
+          "id": "mTMF95BvH7yOJa4L",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "kraken_client_state",
+        "keyType": "string",
+        "options": {}
+      },
+      "id": "4ef5b159-124d-4121-a73e-6347d2ad3347",
+      "name": "Get State (Online Path)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        608
+      ],
+      "credentials": {
+        "redis": {
+          "id": "mTMF95BvH7yOJa4L",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -74,9 +56,42 @@
           },
           "conditions": [
             {
-              "id": "cc4ebb29-4940-465c-962f-e1a8fcbb40ac",
-              "leftValue": "={{ $json.current_version }}",
-              "rightValue": "={{ $json.krakenBootstrapRuneLiteVersion }}",
+              "id": "offline-check",
+              "leftValue": "={{ $json.propertyName }}",
+              "rightValue": "offline",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        16,
+        400
+      ],
+      "id": "486857db-8a53-4889-a6c9-8e4e2f5eb0f4",
+      "name": "Needs Offline Notification?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "online-check",
+              "leftValue": "={{ $json.propertyName }}",
+              "rightValue": "online",
               "operator": {
                 "type": "string",
                 "operation": "notEquals"
@@ -91,105 +106,25 @@
       "typeVersion": 2.3,
       "position": [
         48,
-        624
+        608
       ],
-      "id": "da389d9a-433d-4693-b2a3-19037af51759",
-      "name": "Check Version Divergence"
-    },
-    {
-      "parameters": {
-        "authentication": "webhook",
-        "content": "=📢 **RuneLite Update:** `{{ $json.previous_version }}` ➜ `{{ $json.version }}`\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.discord",
-      "typeVersion": 2,
-      "position": [
-        336,
-        528
-      ],
-      "id": "7d488675-c1c9-4ff0-9e77-bdfd73189273",
-      "name": "Notify Kraken Offline",
-      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
-      "alwaysOutputData": false,
-      "credentials": {
-        "discordWebhookApi": {
-          "id": "2ZmGtQ3nI1vOfhAz",
-          "name": "Discord Webhook account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "authentication": "webhook",
-        "content": "=📢 **RuneLite Update:** `{{ $json.previous_version }}` ➜ `{{ $json.version }}`\n",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.discord",
-      "typeVersion": 2,
-      "position": [
-        352,
-        752
-      ],
-      "id": "c011ae4c-2794-4593-b53e-2e94ac661339",
-      "name": "Notify Kraken Online",
-      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
-      "alwaysOutputData": false,
-      "credentials": {
-        "discordWebhookApi": {
-          "id": "2ZmGtQ3nI1vOfhAz",
-          "name": "Discord Webhook account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "leftValue": "={{ $json.previous_version }}",
-              "rightValue": "={{ $json.current_version }}",
-              "operator": {
-                "type": "string",
-                "operation": "notEquals"
-              },
-              "id": "942bee2d-32e0-4b14-bf51-286fc3e7140a"
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "29967ef7-7ce4-43c0-8a04-69a3551f1099",
-      "name": "RuneLite Version Changed?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -672,
-        416
-      ],
-      "alwaysOutputData": false
+      "id": "d4aea984-9ce4-4674-91f5-6bcf5ed56369",
+      "name": "Needs Online Notification?"
     },
     {
       "parameters": {
         "operation": "set",
-        "key": "runelite_version",
-        "value": "={{ $json.current_version }}",
+        "key": "kraken_client_state",
+        "value": "offline",
         "keyType": "string"
       },
-      "id": "a336d5dc-54fe-4fe7-8839-a5ee78039cda",
-      "name": "Save RuneLite Version",
+      "id": "5a144cce-24a6-4567-a7fa-cde10bc7a292",
+      "name": "Set State Offline",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -224,
-        96
+        240,
+        368
       ],
       "credentials": {
         "redis": {
@@ -200,63 +135,270 @@
     },
     {
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "XEQtHqwDjzx88vzn",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/XEQtHqwDjzx88vzn",
-          "cachedResultName": "Get RuneLite Versions"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
+        "operation": "set",
+        "key": "kraken_client_state",
+        "value": "online",
+        "keyType": "string"
       },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
+      "id": "7fbea9b4-713f-4a59-b4cb-84affb907844",
+      "name": "Set State Online",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
       "position": [
-        -912,
-        416
+        304,
+        592
       ],
-      "name": "Call Get RuneLite Versions",
-      "id": "8551ff1f-6c12-42ae-9f04-484cfb22fa83"
+      "credentials": {
+        "redis": {
+          "id": "mTMF95BvH7yOJa4L",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "XEQtHqwDjzx88vzn",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/XEQtHqwDjzx88vzn",
-          "cachedResultName": "Get RuneLite Versions"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 3
+            }
+          ]
+        }
+      },
+      "id": "a1cc8fa7-4f3a-46bd-a6a3-b9b4d86aae25",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1376,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://minio.kraken-plugins.com/kraken-bootstrap-static/bootstrap.json",
+        "options": {}
+      },
+      "id": "12f86557-04a4-4b74-9e7d-9d116284bb49",
+      "name": "Fetch Kraken Bootstrap",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1152,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\n\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('runelite-api-'));\n\nif (!clientArtifact) {\n    throw new Error(\"Could not find an artifact starting with 'runelite-api-'. Check the input data structure.\");\n}\n\nlet version = clientArtifact.name;\nversion = version.replace('runelite-api-', '').replace('.jar', '');\n\nreturn {\n  krakenBootstrapRuneLiteVersion: version,\n};"
+      },
+      "id": "347ca2de-5c69-4392-aa4a-6f0febf5b0d0",
+      "name": "Parse Kraken Bootstrap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -640,
+        544
+      ],
+      "id": "d1967e23-1ca3-4812-86a5-74ee7087b608",
+      "name": "Merge RL / Kraken"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cc4ebb29-4940-465c-962f-e1a8fcbb40ac",
+              "leftValue": "={{ $json.version }}",
+              "rightValue": "={{ $json.krakenBootstrapRuneLiteVersion }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
       "position": [
-        -400,
-        480
+        -416,
+        544
       ],
-      "name": "Get RuneLite Versions",
-      "id": "2629bbbc-fb5c-4429-b4d1-4ba0aa4e45b5"
+      "id": "bab6f83d-9316-4891-a90b-fca02a2a82fc",
+      "name": "Check Version Divergence"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=📢 **RuneLite Updated:** `{{ $('Merge RL / Kraken').item.json.previous_version }}` ➜ `{{ $('Merge RL / Kraken').item.json.current_version }}`\nKraken is currently verifying the update and will be offline temporarily.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        464,
+        368
+      ],
+      "id": "ddd1c636-db0e-4a83-b434-c7f435a65958",
+      "name": "Notify Client Offline",
+      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "jHs3yDTOLJJPYuBq",
+          "name": "Discord Webhook account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=✅ **Kraken is back online!**\nThe Kraken client has been updated to match RuneLite `{{ $('Merge RL / Kraken').item.json.current_version }}`.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        512,
+        592
+      ],
+      "id": "e9483ac0-cd7e-4bf7-9606-77147224d23b",
+      "name": "Notify Client Online",
+      "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "jHs3yDTOLJJPYuBq",
+          "name": "Discord Webhook account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://static.runelite.net/bootstrap.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8b449fbe-f4ae-4540-a83c-44779e9876f1",
+      "name": "Fetch RuneLite Version",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1136,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\n\n// Find the artifact that starts with 'client-'\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('client-'));\n\n// Ensure the artifact was found before proceeding\nif (!clientArtifact) {\n    throw new Error(\"Could not find an artifact starting with 'client-'. Check the input data structure.\");\n}\n\nconsole.log(\"Found artifact: \", clientArtifact.name)\n\n// 💡 The new, simplified version extraction:\n// 1. Start by getting the name: \"client-1.12.5.2.jar\"\nlet version = clientArtifact.name;\n\n// 2. Remove the \"client-\" prefix\nversion = version.replace('client-', ''); \n\n// 3. Remove the \".jar\" suffix\nversion = version.replace('.jar', ''); \n\n// The result is just the version string (e.g., \"1.12.5.2\" or \"1.12.5\")\n\nconsole.log(\"Parsed version: \", version)\nreturn {\n  version: version,\n  artifact: clientArtifact.name,\n  hash: clientArtifact.hash,\n  size: clientArtifact.size,\n  path: clientArtifact.path\n};"
+      },
+      "id": "c777024b-93be-4b5d-afb3-79427c421182",
+      "name": "Parse RuneLite Bootstrap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        464
+      ]
     }
   ],
   "pinData": {},
   "connections": {
+    "Get State (Offline Path)": {
+      "main": [
+        [
+          {
+            "node": "Needs Offline Notification?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get State (Online Path)": {
+      "main": [
+        [
+          {
+            "node": "Needs Online Notification?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Offline Notification?": {
+      "main": [
+        [
+          {
+            "node": "Set State Offline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Online Notification?": {
+      "main": [
+        [
+          {
+            "node": "Set State Online",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set State Offline": {
+      "main": [
+        [
+          {
+            "node": "Notify Client Offline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set State Online": {
+      "main": [
+        [
+          {
+            "node": "Notify Client Online",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Schedule Trigger": {
       "main": [
         [
@@ -266,7 +408,7 @@
             "index": 0
           },
           {
-            "node": "Call Get RuneLite Versions",
+            "node": "Fetch RuneLite Version",
             "type": "main",
             "index": 0
           }
@@ -310,44 +452,32 @@
       "main": [
         [
           {
-            "node": "Notify Kraken Offline",
+            "node": "Get State (Offline Path)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Notify Kraken Online",
+            "node": "Get State (Online Path)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RuneLite Version Changed?": {
+    "Fetch RuneLite Version": {
       "main": [
         [
           {
-            "node": "Get RuneLite Versions",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Call Get RuneLite Versions": {
-      "main": [
-        [
-          {
-            "node": "RuneLite Version Changed?",
+            "node": "Parse RuneLite Bootstrap",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get RuneLite Versions": {
+    "Parse RuneLite Bootstrap": {
       "main": [
         [
           {
@@ -359,24 +489,17 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "1714382b-60ec-4e49-b61b-b1a654fed36d",
+  "versionId": "48ef6ea4-b5db-4d40-9b75-23be35f94cd2",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a6505d74b5ee4800cc6da6e38a2423cc29240108992c2c30211146b4adaf0c08"
   },
   "id": "u8mRjKATTV9EGxZO",
-  "tags": [
-    {
-      "name": "kraken",
-      "id": "YBFKVDcloOzg0bbE",
-      "updatedAt": "2026-02-28T18:30:41.478Z",
-      "createdAt": "2026-02-28T18:30:41.478Z"
-    }
-  ]
+  "tags": []
 }

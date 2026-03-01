@@ -44,8 +44,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1456,
-        416
+        -1440,
+        640
       ]
     },
     {
@@ -70,8 +70,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1184,
-        384
+        -1120,
+        624
       ]
     },
     {
@@ -114,8 +114,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -1456,
-        208
+        -1440,
+        432
       ],
       "credentials": {
         "redis": {
@@ -186,8 +186,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -800,
-        256
+        -560,
+        544
       ]
     },
     {
@@ -227,8 +227,8 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        -208,
-        464
+        -192,
+        736
       ],
       "webhookId": "6233e2e7-f4cf-4776-8119-66b1d91d4269",
       "credentials": {
@@ -272,8 +272,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -208,
-        128
+        -192,
+        416
       ],
       "credentials": {
         "redis": {
@@ -306,8 +306,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -976,
-        256
+        -816,
+        544
       ],
       "id": "c37968a2-c2f9-4475-a39c-92703e6b2284",
       "name": "Merge1"
@@ -321,8 +321,8 @@
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
-        -208,
-        288
+        -192,
+        544
       ],
       "id": "0e88ea05-ce69-4292-aeef-51256ed578fc",
       "name": "Discord",
@@ -357,6 +357,38 @@
           "name": "Discord Webhook account"
         }
       }
+    },
+    {
+      "parameters": {
+        "content": "### OSRS Revision Updates\n\nThe following updates OSRS Revisions",
+        "height": 192,
+        "width": 1360,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1456,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "ff46a570-8070-49b6-9284-f571679cfd83",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### RuneLite Game Updates\n\nThe following updates RuneLite Versions",
+        "height": 192,
+        "width": 1360,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1488,
+        -592
+      ],
+      "typeVersion": 1,
+      "id": "1c752668-4bd7-49b6-b749-64bd6cd86b5a",
+      "name": "Sticky Note1"
     }
   ],
   "pinData": {},
@@ -524,7 +556,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "e2151b30-a0fa-4cca-8b08-36a85c2e5e4a",
+  "versionId": "4ff7e95b-a7ee-4404-990a-62f1c1cf0825",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a6505d74b5ee4800cc6da6e38a2423cc29240108992c2c30211146b4adaf0c08"
