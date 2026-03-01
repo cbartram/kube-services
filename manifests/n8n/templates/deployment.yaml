@@ -33,5 +33,7 @@ spec:
               value: "true"
             - name: QUEUE_HEALTH_CHECK_ACTIVE
               value: "true"
+            - name: N8N_DIAGNOSTICS_ENABLED
+              value: "false"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
