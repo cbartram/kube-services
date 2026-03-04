@@ -136,7 +136,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={ \n  \"ref\": \"refs/heads/{{$('Prepare PR Data').item.json.newVersion}}\", \n  \"sha\": \"{{$json.object.sha}}\"\n}",
+        "jsonBody": "={ \n  \"ref\": \"refs/heads/bump/runelite-{{$('Prepare PR Data').item.json.newVersion}}\", \n  \"sha\": \"{{$json.object.sha}}\"\n}",
         "options": {}
       },
       "id": "8a9516a4-fa10-4e5f-b1fd-341e082ec515",
@@ -806,7 +806,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "da8fee16-dd07-43c9-bf0f-f19dc5b2cc85",
+  "versionId": "4f1fff9a-00af-4d5c-909e-e80653c02dcb",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a6505d74b5ee4800cc6da6e38a2423cc29240108992c2c30211146b4adaf0c08"
