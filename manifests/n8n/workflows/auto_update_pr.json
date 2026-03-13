@@ -575,6 +575,226 @@
         1344,
         992
       ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/Kraken-Plugins/kraken-example-plugin/git/ref/heads/master",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "207a0971-e4a1-49e3-92d2-c5cb514c6c4f",
+      "name": "Get kraken-examples main SHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2272,
+        944
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "w6Q7rnKwLpLZrC9C",
+          "name": "Header Auth account"
+        },
+        "httpBearerAuth": {
+          "id": "ITrnpu2ujQDIFMWg",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/Kraken-Plugins/kraken-example-plugin/git/refs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ref: 'refs/heads/' + $('Prepare PR Data').item.json.branchName, sha: $json.object.sha }) }}",
+        "options": {}
+      },
+      "id": "46486615-e590-49c1-b29e-dbed39b2c3ae",
+      "name": "Create kraken-examples Branch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2496,
+        944
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "w6Q7rnKwLpLZrC9C",
+          "name": "Header Auth account"
+        },
+        "httpBearerAuth": {
+          "id": "ITrnpu2ujQDIFMWg",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.github.com/repos/Kraken-Plugins/kraken-example-plugin/contents/build.gradle?ref=' + $('Prepare PR Data').item.json.branchName }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3c635398-023e-43c4-a79b-da2909491429",
+      "name": "Get kraken-example build.gradle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2704,
+        944
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "w6Q7rnKwLpLZrC9C",
+          "name": "Header Auth account"
+        },
+        "httpBearerAuth": {
+          "id": "ITrnpu2ujQDIFMWg",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const fileData = $input.first().json;\nconst newVersion = $('Prepare PR Data').first().json.newVersion;\nconst branchName = $('Prepare PR Data').first().json.branchName;\n\nconst rawContent = fileData.content.replace(/\\n/g, '');\nconst decoded = Buffer.from(rawContent, 'base64').toString('utf8');\n\nconst updated = decoded.replace(\n  /def runeLiteVersion = '[^']+'/,\n  `def runeLiteVersion = '${newVersion}'`\n);\n\nif (decoded === updated) {\n  throw new Error(`Could not find 'def runeLiteVersion' in root build.gradle or versions are the same (main branch already has latest runelite). Check the file content.`);\n}\n\nconst newBase64 = Buffer.from(updated).toString('base64');\n\nreturn {\n  content: newBase64,\n  sha: fileData.sha,\n  newVersion,\n  branchName\n};"
+      },
+      "id": "10155362-4baf-4261-acb5-1c37623badb2",
+      "name": "Prepare kraken-example File Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2944,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "https://api.github.com/repos/Kraken-Plugins/kraken-example-plugin/contents/build.gradle",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: 'chore: bump RuneLite to ' + $json.newVersion, content: $json.content, sha: $json.sha, branch: $json.branchName }) }}",
+        "options": {}
+      },
+      "id": "1bb788b1-9e45-401e-8fed-0e9491605fa7",
+      "name": "Update kraken-example build.gradle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3168,
+        944
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "w6Q7rnKwLpLZrC9C",
+          "name": "Header Auth account"
+        },
+        "httpBearerAuth": {
+          "id": "ITrnpu2ujQDIFMWg",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/Kraken-Plugins/kraken-example-plugin/pulls",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: 'chore: bump RuneLite to ' + $('Prepare PR Data').item.json.newVersion, head: $('Prepare PR Data').item.json.branchName, base: 'master', body: '## RuneLite Version Bump\\n\\nAutomated PR to update RuneLite from `' + $('Prepare PR Data').item.json.prevVersion + '` to `' + $('Prepare PR Data').item.json.newVersion + '`.\\n\\n**File changed:** `build.gradle`' }) }}",
+        "options": {}
+      },
+      "id": "c6a217f0-bd36-4e83-909a-55918e7071a7",
+      "name": "Create kraken-example PR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3392,
+        944
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "w6Q7rnKwLpLZrC9C",
+          "name": "Header Auth account"
+        },
+        "httpBearerAuth": {
+          "id": "ITrnpu2ujQDIFMWg",
+          "name": "Bearer Auth account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -631,6 +851,11 @@
     "Prepare PR Data": {
       "main": [
         [
+          {
+            "node": "Get kraken-examples main SHA",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "Get kraken-api Main SHA",
             "type": "main",
@@ -798,6 +1023,61 @@
           }
         ]
       ]
+    },
+    "Get kraken-examples main SHA": {
+      "main": [
+        [
+          {
+            "node": "Create kraken-examples Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create kraken-examples Branch": {
+      "main": [
+        [
+          {
+            "node": "Get kraken-example build.gradle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get kraken-example build.gradle": {
+      "main": [
+        [
+          {
+            "node": "Prepare kraken-example File Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare kraken-example File Content": {
+      "main": [
+        [
+          {
+            "node": "Update kraken-example build.gradle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update kraken-example build.gradle": {
+      "main": [
+        [
+          {
+            "node": "Create kraken-example PR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -806,7 +1086,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "4f1fff9a-00af-4d5c-909e-e80653c02dcb",
+  "versionId": "701b2286-f314-46e0-99b5-f7bd56ad755b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "a6505d74b5ee4800cc6da6e38a2423cc29240108992c2c30211146b4adaf0c08"
