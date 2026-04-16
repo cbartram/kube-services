@@ -35,5 +35,16 @@ spec:
               value: "true"
             - name: N8N_DIAGNOSTICS_ENABLED
               value: "false"
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: n8n-data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: n8n-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim }}
+      {{- end }}

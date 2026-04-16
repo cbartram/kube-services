@@ -1,7 +1,10 @@
 # N8N Deployments
 
-Sometimes the N8N PVC can become wiped or corrupted and N8N workflows needs to be re-created from scratch. Follow
-the steps below to recreate them.
+N8N is configured to persist its runtime state on the `n8n-pvc` Longhorn volume mounted at `/home/node/.n8n`.
+That keeps workflows, credentials, and settings across pod restarts and node outages as long as the PVC remains intact.
+
+If the PVC is ever lost or corrupted, N8N will come back up empty and workflows need to be re-created from scratch.
+Follow the steps below to restore them.
 
 ### Uploading Workflows
 
