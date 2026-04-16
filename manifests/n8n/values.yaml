@@ -19,6 +19,13 @@ persistence:
   existingClaim: n8n-pvc
   mountPath: /home/node/.n8n
 
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  initChownEnabled: true
+
 resources:
    limits:
      cpu: 200m

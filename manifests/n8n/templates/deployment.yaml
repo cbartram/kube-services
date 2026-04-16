@@ -15,6 +15,29 @@ spec:
       labels:
         {{- toYaml .Values.labels | nindent 8 }}
     spec:
+      {{- if .Values.securityContext }}
+      securityContext:
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+        fsGroupChangePolicy: {{ .Values.securityContext.fsGroupChangePolicy }}
+      {{- end }}
+      {{- if and .Values.persistence.enabled .Values.securityContext.initChownEnabled }}
+      initContainers:
+        - name: n8n-volume-permissions
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - chown -R 1000:1000 {{ .Values.persistence.mountPath }}
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: n8n-data
+              mountPath: {{ .Values.persistence.mountPath }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
