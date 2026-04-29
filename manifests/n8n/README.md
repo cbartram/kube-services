@@ -2,9 +2,13 @@
 
 N8N is configured to persist its runtime state on the `n8n-pvc` Longhorn volume mounted at `/home/node/.n8n`.
 That keeps workflows, credentials, and settings across pod restarts and node outages as long as the PVC remains intact.
+On first boot, the chart also imports any JSON files in `workflows/` into N8N automatically.
 
 If the PVC is ever lost or corrupted, N8N will come back up empty and workflows need to be re-created from scratch.
 Follow the steps below to restore them.
+
+If you update the bundled workflow JSON files and want N8N to import them again, delete the bootstrap marker file
+`/home/node/.n8n/.bootstrap-complete` from the PVC and restart the pod.
 
 ### Uploading Workflows
 

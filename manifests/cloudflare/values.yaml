@@ -1,6 +1,6 @@
 # Default values for cloudflared.
 
-replicaCount: 2
+replicaCount: 3
 
 image:
   repository: cloudflare/cloudflared
@@ -9,7 +9,8 @@ image:
 
 resources:
   requests:
-    cpu: 10m
-    memory: 256Mi
+    cpu: 50m
+    memory: 128Mi
   limits:
-    memory: 512Mi
+    cpu: 100m
+    memory: 256Mi
