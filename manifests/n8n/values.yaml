@@ -26,6 +26,10 @@ securityContext:
   fsGroupChangePolicy: OnRootMismatch
   initChownEnabled: true
 
+bootstrap:
+  enabled: true
+  markerFile: /home/node/.n8n/.bootstrap-complete
+
 resources:
    limits:
      cpu: 200m

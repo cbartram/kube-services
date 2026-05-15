@@ -7,7 +7,7 @@ spec:
   parentRefs:
     - name: kraken-gateway
       namespace: kraken
-      sectionName: n8n-https
+      sectionName: http-subdomains
   hostnames:
     - "n8n.kraken-plugins.com"
   rules:

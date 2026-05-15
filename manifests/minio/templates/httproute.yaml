@@ -7,7 +7,7 @@ spec:
   parentRefs:
     - name: kraken-gateway
       namespace: kraken
-      sectionName: minio-https
+      sectionName: http-subdomain
   hostnames:
     - "minio.kraken-plugins.com"
   rules:
@@ -31,7 +31,7 @@ spec:
   parentRefs:
     - name: kraken-gateway
       namespace: kraken
-      sectionName: minio-console-https
+      sectionName: http-subdomain
   hostnames:
     - "minio-console.kraken-plugins.com"
   rules:
