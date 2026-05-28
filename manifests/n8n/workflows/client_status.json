@@ -8,17 +8,17 @@
         "keyType": "string",
         "options": {}
       },
-      "id": "f7373b8b-af6c-4c75-8b8f-41eb05acb999",
+      "id": "5d0ebb68-5ce6-4859-a4af-17dde4012312",
       "name": "Get State (Offline Path)",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -176,
-        400
+        -416,
+        32
       ],
       "credentials": {
         "redis": {
-          "id": "mTMF95BvH7yOJa4L",
+          "id": "SPKBRi3qvTSBLkUq",
           "name": "Redis account"
         }
       }
@@ -30,18 +30,18 @@
         "keyType": "string",
         "options": {}
       },
-      "id": "4ef5b159-124d-4121-a73e-6347d2ad3347",
+      "id": "8d112d77-5eaa-4a98-abd6-75812cb5242e",
       "name": "Get State (Online Path)",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -160,
-        608
+        -400,
+        240
       ],
       "credentials": {
         "redis": {
-          "id": "mTMF95BvH7yOJa4L",
-          "name": "Redis account"
+          "id": "tQrCsjnbEwxNJazY",
+          "name": "Redis account 2"
         }
       }
     },
@@ -72,10 +72,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        16,
-        400
+        -224,
+        32
       ],
-      "id": "486857db-8a53-4889-a6c9-8e4e2f5eb0f4",
+      "id": "20f27007-accb-4b70-a19d-b57ae00d718f",
       "name": "Needs Offline Notification?"
     },
     {
@@ -105,10 +105,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        48,
-        608
+        -192,
+        240
       ],
-      "id": "d4aea984-9ce4-4674-91f5-6bcf5ed56369",
+      "id": "cb8f4226-1768-41e3-b183-59a04a4221bd",
       "name": "Needs Online Notification?"
     },
     {
@@ -118,17 +118,17 @@
         "value": "offline",
         "keyType": "string"
       },
-      "id": "5a144cce-24a6-4567-a7fa-cde10bc7a292",
+      "id": "da880667-ea72-4794-8a39-3a552685cc08",
       "name": "Set State Offline",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        240,
-        368
+        0,
+        0
       ],
       "credentials": {
         "redis": {
-          "id": "mTMF95BvH7yOJa4L",
+          "id": "SPKBRi3qvTSBLkUq",
           "name": "Redis account"
         }
       }
@@ -140,17 +140,17 @@
         "value": "online",
         "keyType": "string"
       },
-      "id": "7fbea9b4-713f-4a59-b4cb-84affb907844",
+      "id": "27399c66-8113-4b8e-b8f1-bee17e62c3d9",
       "name": "Set State Online",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        304,
-        592
+        64,
+        224
       ],
       "credentials": {
         "redis": {
-          "id": "mTMF95BvH7yOJa4L",
+          "id": "SPKBRi3qvTSBLkUq",
           "name": "Redis account"
         }
       }
@@ -166,13 +166,13 @@
           ]
         }
       },
-      "id": "a1cc8fa7-4f3a-46bd-a6a3-b9b4d86aae25",
+      "id": "95c9df77-2aee-470e-85b8-2c84a73f962f",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -1376,
-        640
+        -1616,
+        272
       ]
     },
     {
@@ -180,26 +180,26 @@
         "url": "https://minio.kraken-plugins.com/kraken-bootstrap-static/bootstrap.json",
         "options": {}
       },
-      "id": "12f86557-04a4-4b74-9e7d-9d116284bb49",
+      "id": "6ded1d30-eee3-4e9a-9a0d-44c6ecf50e1e",
       "name": "Fetch Kraken Bootstrap",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1152,
-        672
+        -1392,
+        304
       ]
     },
     {
       "parameters": {
         "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\n\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('runelite-api-'));\n\nif (!clientArtifact) {\n    throw new Error(\"Could not find an artifact starting with 'runelite-api-'. Check the input data structure.\");\n}\n\nlet version = clientArtifact.name;\nversion = version.replace('runelite-api-', '').replace('.jar', '');\n\nreturn {\n  krakenBootstrapRuneLiteVersion: version,\n};"
       },
-      "id": "347ca2de-5c69-4392-aa4a-6f0febf5b0d0",
+      "id": "ab1e4a23-b099-4eb7-a53b-81c47e70b7a2",
       "name": "Parse Kraken Bootstrap",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -912,
-        672
+        -1152,
+        304
       ]
     },
     {
@@ -211,10 +211,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -640,
-        544
+        -880,
+        176
       ],
-      "id": "d1967e23-1ca3-4812-86a5-74ee7087b608",
+      "id": "ce73e942-e1cc-403f-8070-e9e6c8eae8b0",
       "name": "Merge RL / Kraken"
     },
     {
@@ -244,10 +244,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -416,
-        544
+        -656,
+        176
       ],
-      "id": "bab6f83d-9316-4891-a90b-fca02a2a82fc",
+      "id": "d0e35b3f-f9a2-47b8-967f-4797f104b174",
       "name": "Check Version Divergence"
     },
     {
@@ -259,16 +259,16 @@
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
-        464,
-        368
+        0,
+        -176
       ],
-      "id": "ddd1c636-db0e-4a83-b434-c7f435a65958",
+      "id": "f1fb8466-3243-4fdc-885c-7f288e924445",
       "name": "Notify Client Offline",
       "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
       "credentials": {
         "discordWebhookApi": {
-          "id": "jHs3yDTOLJJPYuBq",
-          "name": "Discord Webhook account 2"
+          "id": "Ohnz8bEWwKeDCTRM",
+          "name": "Discord Webhook account"
         }
       }
     },
@@ -281,16 +281,16 @@
       "type": "n8n-nodes-base.discord",
       "typeVersion": 2,
       "position": [
-        512,
-        592
+        272,
+        224
       ],
-      "id": "e9483ac0-cd7e-4bf7-9606-77147224d23b",
+      "id": "c18df259-1e80-482a-826b-2c6c9ca715ad",
       "name": "Notify Client Online",
       "webhookId": "c4e1ada7-ef6b-4706-8fef-a0c3ad75e741",
       "credentials": {
         "discordWebhookApi": {
-          "id": "jHs3yDTOLJJPYuBq",
-          "name": "Discord Webhook account 2"
+          "id": "Ohnz8bEWwKeDCTRM",
+          "name": "Discord Webhook account"
         }
       }
     },
@@ -308,27 +308,42 @@
         },
         "options": {}
       },
-      "id": "8b449fbe-f4ae-4540-a83c-44779e9876f1",
+      "id": "cc6d4953-62da-4e10-aab8-2faf61eaf72b",
       "name": "Fetch RuneLite Version",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1136,
-        464
+        -1376,
+        96
       ]
     },
     {
       "parameters": {
         "jsCode": "// Extract RuneLite version from bootstrap.json\nconst bootstrapData = $input.first().json;\n\n// Find the artifact that starts with 'client-'\nconst clientArtifact = bootstrapData.artifacts.find(a => a.name.startsWith('client-'));\n\n// Ensure the artifact was found before proceeding\nif (!clientArtifact) {\n    throw new Error(\"Could not find an artifact starting with 'client-'. Check the input data structure.\");\n}\n\nconsole.log(\"Found artifact: \", clientArtifact.name)\n\n// 💡 The new, simplified version extraction:\n// 1. Start by getting the name: \"client-1.12.5.2.jar\"\nlet version = clientArtifact.name;\n\n// 2. Remove the \"client-\" prefix\nversion = version.replace('client-', ''); \n\n// 3. Remove the \".jar\" suffix\nversion = version.replace('.jar', ''); \n\n// The result is just the version string (e.g., \"1.12.5.2\" or \"1.12.5\")\n\nconsole.log(\"Parsed version: \", version)\nreturn {\n  version: version,\n  artifact: clientArtifact.name,\n  hash: clientArtifact.hash,\n  size: clientArtifact.size,\n  path: clientArtifact.path\n};"
       },
-      "id": "c777024b-93be-4b5d-afb3-79427c421182",
+      "id": "4f1e372a-8292-40d2-9c78-30731760521f",
       "name": "Parse RuneLite Bootstrap",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -912,
-        464
+        -1152,
+        96
       ]
+    },
+    {
+      "parameters": {
+        "content": "## Workflow\nThis workflow Updates Redis with the current state of the Kraken client. It will send a notification when the client is restored but NOT when the client goes down. There is a separate workflow which will send the RuneLite update when the client goes offline. If this is enabled for \"notify client offline\" step it will double post in Discord.",
+        "height": 176,
+        "width": 544
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        -160
+      ],
+      "id": "e3f666b0-83f3-4e67-8bbf-2de15a14ec04",
+      "name": "Sticky Note"
     }
   ],
   "pinData": {},
@@ -379,13 +394,7 @@
     },
     "Set State Offline": {
       "main": [
-        [
-          {
-            "node": "Notify Client Offline",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Set State Online": {
@@ -492,14 +501,13 @@
   "active": true,
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
+    "binaryMode": "separate"
   },
-  "versionId": "48ef6ea4-b5db-4d40-9b75-23be35f94cd2",
+  "versionId": "ba99ccbd-29fa-4433-a87d-28eb199e7d04",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "a6505d74b5ee4800cc6da6e38a2423cc29240108992c2c30211146b4adaf0c08"
+    "instanceId": "342bf1cb241bb55aea5bc1194aa23c8cbd0f6a7b521b1078ca5944e70f48e294"
   },
-  "id": "u8mRjKATTV9EGxZO",
+  "id": "QvOhCNwj6Mu6pBCb",
   "tags": []
 }
