@@ -1,0 +1,105 @@
+namespace: jellyfin
+replicaCount: 1
+
+labels:
+  app: jellyfin
+
+image:
+  repository: jellyfin/jellyfin
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  name: jellyfin
+  automountServiceAccountToken: false
+  annotations: {}
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+
+containerSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  name: jellyfin-service
+  type: ClusterIP
+  port: 8096
+  targetPort: 8096
+  protocol: TCP
+
+httpRoute:
+  enabled: true
+  name: jellyfin-route
+  parentName: kraken-gateway
+  parentNamespace: kraken
+  sectionName: http-subdomain
+  hostname: jellyfin.kraken-plugins.com
+  pathPrefix: /
+  requestTimeout: 3600s
+  backendRequestTimeout: 3600s
+
+persistence:
+  enabled: true
+  claimName: jellyfin-config-pvc
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  size: 5Gi
+  mountPath: /config
+
+cache:
+  enabled: true
+  type: emptyDir
+  claimName: ""
+  mountPath: /cache
+  sizeLimit: 10Gi
+
+media:
+  enabled: true
+  claimName: jellyfin-media-pvc
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  size: 50Gi
+  mountPath: /media
+  readOnly: false
+
+extraEnv:
+  - name: TZ
+    value: America/New_York
+  - name: JELLYFIN_PublishedServerUrl
+    value: 'https://jellyfin.kraken-plugins.com'
+  - name: JELLYFIN_CACHE_DIR
+    value: '/cache'
+
+probes:
+  path: /health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+resources:
+  limits:
+    cpu: 512m
+    memory: 2Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
