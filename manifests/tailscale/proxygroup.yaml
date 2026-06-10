@@ -1,0 +1,9 @@
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: kube-api
+spec:
+  type: kube-apiserver
+  replicas: 2
+  kubeAPIServer:
+    mode: auth
