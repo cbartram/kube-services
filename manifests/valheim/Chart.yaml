@@ -1,0 +1,6 @@
+apiVersion: v2
+name: Valheim Dedicated Server
+description: Valheim dedicated server exposed privately through Tailscale
+type: application
+version: 0.2.0
+appVersion: "latest"

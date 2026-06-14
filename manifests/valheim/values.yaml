@@ -1,0 +1,60 @@
+name: valheim
+namespace: valheim
+
+labels:
+  app.kubernetes.io/name: valheim
+  app.kubernetes.io/instance: valheim
+
+image:
+  repository: ghcr.io/community-valheim-tools/valheim-server
+  tag: latest
+  pullPolicy: IfNotPresent
+
+server:
+  name: "Valheim Kubernetes"
+  worldName: "Valheim Kubernetes"
+  passwordSecret:
+    name: valheim-secret
+    key: server-password
+  port:
+    game: 2456
+    status: 2457
+    crossplay: 2458
+  public: false
+  crossplay: false
+  timezone: "America/New_York"
+
+mods:
+  bepinex: false
+  valheimPlus: true
+
+persistence:
+  storageClassName: longhorn
+  config:
+    claimName: valheim-config
+    size: 10Gi
+  server:
+    claimName: valheim-server
+    size: 10Gi
+
+tailscale:
+  hostname: valheim
+  proxyGroupName: valheim-ingress
+  proxyReplicas: 2
+
+resources:
+  requests:
+    memory: 12Gi
+    cpu: 3000m
+  limits:
+    memory: 12Gi
+    cpu: 3000m
+
+extraEnv:
+  ADMINLIST_IDS: "76561198037782343"
+  BACKUPS_MAX_COUNT: "5"
+  VALHEIM_PLUS_REPO: "Grantapher/ValheimPlus"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

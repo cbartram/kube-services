@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+  annotations:
+    tailscale.com/hostname: {{ .Values.tailscale.hostname | quote }}
+    tailscale.com/proxy-group: {{ .Values.tailscale.proxyGroupName | quote }}
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  ports:
+    - name: game
+      port: {{ .Values.server.port.game }}
+      targetPort: {{ .Values.server.port.game }}
+      protocol: UDP
+    - name: status
+      port: {{ .Values.server.port.status }}
+      targetPort: {{ .Values.server.port.status }}
+      protocol: UDP
+    - name: crossplay
+      port: {{ .Values.server.port.crossplay }}
+      targetPort: {{ .Values.server.port.crossplay }}
+      protocol: UDP
+  selector:
+    {{- toYaml .Values.labels | nindent 4 }}

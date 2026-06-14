@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+spec:
+  revisionHistoryLimit: 1
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- toYaml .Values.labels | nindent 6 }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- toYaml .Values.labels | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 120
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: SERVER_NAME
+              value: {{ .Values.server.name | quote }}
+            - name: WORLD_NAME
+              value: {{ .Values.server.worldName | quote }}
+            - name: SERVER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.server.passwordSecret.name }}
+                  key: {{ .Values.server.passwordSecret.key }}
+            - name: SERVER_PORT
+              value: {{ .Values.server.port.game | quote }}
+            - name: SERVER_PUBLIC
+              value: {{ .Values.server.public | quote }}
+            - name: CROSSPLAY
+              value: {{ .Values.server.crossplay | quote }}
+            - name: TZ
+              value: {{ .Values.server.timezone | quote }}
+            - name: BEPINEX
+              value: {{ .Values.mods.bepinex | quote }}
+            - name: VALHEIM_PLUS
+              value: {{ .Values.mods.valheimPlus | quote }}
+            {{- with .Values.extraEnv }}
+            {{- range $name, $value := . }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: game
+              containerPort: {{ .Values.server.port.game }}
+              protocol: UDP
+            - name: status
+              containerPort: {{ .Values.server.port.status }}
+              protocol: UDP
+            - name: crossplay
+              containerPort: {{ .Values.server.port.crossplay }}
+              protocol: UDP
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: server
+              mountPath: /opt/valheim
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.config.claimName }}
+        - name: server
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.server.claimName }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
