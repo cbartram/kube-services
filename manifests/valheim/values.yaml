@@ -25,7 +25,7 @@ server:
   timezone: "America/New_York"
 
 mods:
-  # These cannot both be true, choose one or the other.
+  # These cannot both be true, choose one or the other. Recommended to choose valheimPlus as it includes bepinex
   bepinex: false
   valheimPlus: true
 
