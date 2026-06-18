@@ -25,6 +25,7 @@ server:
   timezone: "America/New_York"
 
 mods:
+  # These cannot both be true, choose one or the other.
   bepinex: false
   valheimPlus: true
 

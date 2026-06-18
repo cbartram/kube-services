@@ -8,6 +8,7 @@ metadata:
   annotations:
     tailscale.com/hostname: {{ .Values.tailscale.hostname | quote }}
     tailscale.com/proxy-group: {{ .Values.tailscale.proxyGroupName | quote }}
+    tailscale.com/expose: "true"
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale
