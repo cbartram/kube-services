@@ -29,7 +29,7 @@ kubectl create namespace valheim
 kubectl -n valheim create secret generic valheim-secret --from-literal=server-password="replace-with-a-password"
 ```
 
-Valheim requires `SERVER_PASS` to be at least 5 characters unless the server password is disabled through mod configuration.
+Valheim requires `SERVER_PASS` to be at least five characters unless the server password is disabled through mod configuration.
 
 Install or upgrade the chart:
 
