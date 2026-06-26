@@ -1,0 +1,23 @@
+replicaCount: 1
+namespace: seaweedfs
+
+image:
+  repository: chrislusf/seaweedfs
+  pullPolicy: IfNotPresent
+  tag: "4.36"
+
+service:
+  type: ClusterIP
+  s3Port: 8333
+  masterPort: 9333
+  volumePort: 9340
+  filerPort: 8888
+  webDavPort: 7333
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi

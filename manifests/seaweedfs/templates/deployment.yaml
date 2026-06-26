@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.namespace }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: seaweedfs
+spec:
+  revisionHistoryLimit: 1
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: seaweedfs
+  template:
+    metadata:
+      labels:
+        app: seaweedfs
+    spec:
+      containers:
+        - name: seaweedfs
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - "weed"
+          args:
+            - "server"
+            - "-dir=/data"
+            - "-master.port={{ .Values.service.masterPort }}"
+            - "-volume.port={{ .Values.service.volumePort }}"
+            - "-filer"
+            - "-filer.port={{ .Values.service.filerPort }}"
+            - "-s3"
+            - "-s3.port={{ .Values.service.s3Port }}"
+            - "-webdav"
+            - "-webdav.port={{ .Values.service.webDavPort }}"
+            - "-s3.config=/etc/seaweedfs/s3.json"
+          ports:
+            - name: s3
+              containerPort: {{ .Values.service.s3Port }}
+              protocol: TCP
+            - name: master
+              containerPort: {{ .Values.service.masterPort }}
+              protocol: TCP
+            - name: volume
+              containerPort: {{ .Values.service.volumePort }}
+              protocol: TCP
+            - name: filer
+              containerPort: {{ .Values.service.filerPort }}
+              protocol: TCP
+            - name: webdav
+              containerPort: {{ .Values.service.webDavPort }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /data
+              name: seaweedfs-storage
+            - mountPath: /etc/seaweedfs
+              name: s3-config-volume
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: seaweedfs-storage
+          persistentVolumeClaim:
+            claimName: seaweedfs-pvc-longhorn
+        - name: s3-config-volume
+          secret:
+            secretName: seaweedfs-s3-config

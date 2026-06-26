@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-svc
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: seaweedfs
+spec:
+  internalTrafficPolicy: Cluster
+  type: {{ .Values.service.type }}
+  selector:
+    app: seaweedfs
+  ports:
+    - name: s3
+      port: {{ .Values.service.s3Port }}
+      targetPort: {{ .Values.service.s3Port }}
+      protocol: TCP
+    - name: master-ui
+      port: {{ .Values.service.masterPort }}
+      targetPort: {{ .Values.service.masterPort }}
+      protocol: TCP
+    - name: volume
+      port: {{ .Values.service.volumePort }}
+      targetPort: {{ .Values.service.volumePort }}
+      protocol: TCP
+    - name: filer-ui
+      port: {{ .Values.service.filerPort }}
+      targetPort: {{ .Values.service.filerPort }}
+      protocol: TCP
+    - name: webdav
+      port: {{ .Values.service.webDavPort }}
+      targetPort: {{ .Values.service.webDavPort }}
+      protocol: TCP
