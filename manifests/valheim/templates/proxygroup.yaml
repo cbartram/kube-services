@@ -4,4 +4,7 @@ metadata:
   name: {{ .Values.tailscale.proxyGroupName }}
 spec:
   type: ingress
+  tags:
+    - "tag:k8s"
+    - "tag:valheim"
   replicas: {{ .Values.tailscale.proxyReplicas }}
