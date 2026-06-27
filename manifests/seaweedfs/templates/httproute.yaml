@@ -9,7 +9,7 @@ spec:
       namespace: kraken
       sectionName: http-subdomain
   hostnames:
-    - "minio.kraken-plugins.com"
+    - "seaweed.kraken-plugins.com"
   rules:
     - matches:
         - path:
@@ -19,29 +19,30 @@ spec:
         request: "3600s"
         backendRequest: "3600s"
       backendRefs:
-        - name: minio-svc
-          port: {{.Values.service.apiPort}}
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: minio-console-route
-  namespace: minio
-spec:
-  parentRefs:
-    - name: kraken-gateway
-      namespace: kraken
-      sectionName: http-subdomain
-  hostnames:
-    - "minio-console.kraken-plugins.com"
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      timeouts:
-        request: "3600s"
-        backendRequest: "3600s"
-      backendRefs:
-        - name: minio-svc
-          port: {{.Values.service.consolePort}}
+        - name: seaweedfs-svc
+          port: {{.Values.service.s3Port}}
+{{/* Commented out because there is no auth on this so just locally port-forward it. Anyone could upload files */}}
+{{/*---*/}}
+{{/*apiVersion: gateway.networking.k8s.io/v1*/}}
+{{/*kind: HTTPRoute*/}}
+{{/*metadata:*/}}
+{{/*  name: seaweedfs-filer-api-route*/}}
+{{/*  namespace: {{.Values.namespace}}*/}}
+{{/*spec:*/}}
+{{/*  parentRefs:*/}}
+{{/*    - name: kraken-gateway*/}}
+{{/*      namespace: kraken*/}}
+{{/*      sectionName: http-subdomain*/}}
+{{/*  hostnames:*/}}
+{{/*    - "seaweedf.kraken-plugins.com"*/}}
+{{/*  rules:*/}}
+{{/*    - matches:*/}}
+{{/*        - path:*/}}
+{{/*            type: PathPrefix*/}}
+{{/*            value: /*/}}
+{{/*      timeouts:*/}}
+{{/*        request: "3600s"*/}}
+{{/*        backendRequest: "3600s"*/}}
+{{/*      backendRefs:*/}}
+{{/*        - name: seaweedfs-svc*/}}
+{{/*          port: {{.Values.service.filerPort}}*/}}
