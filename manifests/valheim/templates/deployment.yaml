@@ -20,6 +20,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 120
       containers:
+        # --- Main Valheim Container ---
         - name: {{ .Values.name }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -68,6 +69,39 @@ spec:
               mountPath: /opt/valheim
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+
+        # --- Rekja gRPC Sidecar Container ---
+        - name: rekja-sidecar
+          image: {{.Values.sidecar.image.repository}}:{{.Values.sidecar.image.tag}}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REKJA_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: REKJA_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # Point to the main Valheim container for log retrieval and restarts
+            - name: REKJA_CONTAINER
+              value: {{ .Values.name | quote }}
+            - name: REKJA_GRPC_ADDR
+              value: {{.Values.sidecar.port | quote}}
+            - name: REKJA_PLUGINS_DIR
+              value: "/config/valheimplus/plugins"
+            - name: REKJA_LABEL_SELECTOR
+              value: "app.kubernetes.io/name={{ .Values.name }}"
+          ports:
+            - name: grpc
+              containerPort: {{.Values.sidecar.port}}
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: server
+              mountPath: /opt/valheim
+
       volumes:
         - name: config
           persistentVolumeClaim:

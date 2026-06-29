@@ -10,6 +10,13 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
+
+sidecar:
+  image:
+    repository: cbartram/rekja-sidecar
+    tag: latest
+  port: "8080"
+
 server:
   name: "Valheim Kubernetes"
   worldName: "Valheim Kubernetes"
