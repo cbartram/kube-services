@@ -1,0 +1,77 @@
+name: vrising
+namespace: vrising
+
+labels:
+  app.kubernetes.io/name: vrising
+  app.kubernetes.io/instance: vrising
+
+image:
+  repository: trueosiris/vrising
+  tag: latest
+  pullPolicy: IfNotPresent
+
+server:
+  name: "V-Rising Kubernetes"
+  worldName: "custom-world-1"
+  passwordSecret:
+    name: vrising-secret
+    key: server-password
+  port:
+    game: 9876
+    status: 9877
+  timezone: "America/New_York"
+
+persistence:
+  storageClassName: longhorn
+  server:
+    claimName: vrising-server
+    size: 15Gi
+  world:
+    claimName: vrising-world
+    size: 3Gi
+
+tailscale:
+  hostname: vrising
+  proxyGroupName: vrising-ingress
+  proxyReplicas: 2
+
+resources:
+  requests:
+    memory: 9Gi
+    cpu: 3000m
+  limits:
+    memory: 10Gi
+    cpu: 3000m
+
+extraEnv:
+  HOST_SETTINGS_MaxConnectedUsers: "10"
+  HOST_SETTINGS_MaxConnectedAdmins: "4"
+  HOST_SETTINGS_GameDifficultyPreset: "Difficulty_Normal"
+  HOST_SETTINGS_AutoSaveCount: "3"
+  HOST_SETTINGS_AutoSaveInterval: "120"
+  HOST_SETTINGS_ListOnSteam: "false"
+  HOST_SETTINGS_LISTONEOS: "false"
+  GAME_SETTINGS_GameModeType: "PvE"
+  # Doubles the amount of wood/stone/etc. you get from nodes
+  GAME_SETTINGS_MaterialYieldModifier_Global: "3.0"
+
+  # Doubles the loot dropped by enemies and chests
+  GAME_SETTINGS_DropTableModifier_General: "2.0"
+
+  # Doubles how many items can stack in one inventory slot
+  GAME_SETTINGS_InventoryStacksModifier: "2.0"
+
+  # Doubles the speed of crafting at workbenches
+  GAME_SETTINGS_CraftRateModifier: "4.0"
+
+  # Doubles the speed of refinement (e.g., smelting ore, sawing planks)
+  GAME_SETTINGS_RefinementRateModifier: "4.0"
+
+  GAME_SETTINGS_DayStartHour: "10"
+  GAME_SETTINGS_DayEndHour: "14"
+  GAME_SETTINGS_CastleBloodEssenceDrainModifier: "0.2"
+
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

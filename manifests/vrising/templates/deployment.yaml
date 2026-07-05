@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+spec:
+  revisionHistoryLimit: 1
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- toYaml .Values.labels | nindent 6 }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- toYaml .Values.labels | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 120
+      containers:
+        # --- Main Valheim Container ---
+        - name: {{ .Values.name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: WORLDNAME
+              value: {{ .Values.server.worldName | quote }}
+            - name: SERVERNAME
+              value: {{ .Values.server.name | quote }}
+            - name: GAMEPORT
+              value: {{ .Values.server.port.game | quote }}
+            - name: QUERYPORT
+              value: {{ .Values.server.port.status | quote }}
+            - name: HOST_SETTINGS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.server.passwordSecret.name }}
+                  key: {{ .Values.server.passwordSecret.key }}
+            - name: TZ
+              value: {{ .Values.server.timezone | quote }}
+            - name: WINEDEBUG
+              value: "fixme-all"
+            {{- with .Values.extraEnv }}
+            {{- range $name, $value := . }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: game
+              containerPort: {{ .Values.server.port.game }}
+              protocol: UDP
+            - name: status
+              containerPort: {{ .Values.server.port.status }}
+              protocol: UDP
+          volumeMounts:
+            - name: {{ .Values.persistence.server.claimName }}
+              mountPath: /mnt/vrising/server
+            - name: {{ .Values.persistence.world.claimName }}
+              mountPath: /mnt/vrising/persistentdata
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: vrising-server
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.server.claimName }}
+        - name: vrising-world
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.world.claimName }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,10 @@
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: {{ .Values.tailscale.proxyGroupName }}
+spec:
+  type: ingress
+  tags:
+    - "tag:k8s"
+    - "tag:vrising"
+  replicas: {{ .Values.tailscale.proxyReplicas }}
