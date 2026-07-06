@@ -48,7 +48,7 @@ extraEnv:
   HOST_SETTINGS_MaxConnectedAdmins: "4"
   HOST_SETTINGS_GameDifficultyPreset: "Difficulty_Normal"
   HOST_SETTINGS_AutoSaveCount: "3"
-  HOST_SETTINGS_AutoSaveInterval: "120"
+  HOST_SETTINGS_AutoSaveInterval: "250" # in seconds
   HOST_SETTINGS_ListOnSteam: "false"
   HOST_SETTINGS_LISTONEOS: "false"
   GAME_SETTINGS_GameModeType: "PvE"
