@@ -51,15 +51,34 @@ extraEnv:
   HOST_SETTINGS_AutoSaveInterval: "250" # in seconds
   HOST_SETTINGS_ListOnSteam: "false"
   HOST_SETTINGS_LISTONEOS: "false"
+
+  # No PvP
   GAME_SETTINGS_GameModeType: "PvE"
-  # Doubles the amount of wood/stone/etc. you get from nodes
+
+  # Keep your gear on death instead of dropping it
+  GAME_SETTINGS_BloodBoundEquipment: "false"
+
+  # Faster research and servant conversion
+  GAME_SETTINGS_ResearchTimeModifier: "0.25"
+  GAME_SETTINGS_ServantConvertRateModifier: "0.25"
+
+  # Cheaper repairs given your build/craft rates are boosted
+  GAME_SETTINGS_RepairCostModifier: "0.5"
+
+  # More than one Soul Shard type can spawn per boss (less contention if multiplayer)
+  GAME_SETTINGS_RelicSpawnType: "Plentiful"
+
+  # No restrictions on teleporting items like Grave Dust and Rubies etc...
+  GAME_SETTINGS_TeleportBoundItems: "false"
+
+  # Triples the amount of wood/stone/etc. you get from nodes
   GAME_SETTINGS_MaterialYieldModifier_Global: "3.0"
 
   # Doubles the loot dropped by enemies and chests
   GAME_SETTINGS_DropTableModifier_General: "2.0"
 
   # Doubles how many items can stack in one inventory slot
-  GAME_SETTINGS_InventoryStacksModifier: "2.0"
+  GAME_SETTINGS_InventoryStacksModifier: "3.0"
 
   # Doubles the speed of crafting at workbenches
   GAME_SETTINGS_CraftRateModifier: "4.0"
@@ -67,9 +86,13 @@ extraEnv:
   # Doubles the speed of refinement (e.g., smelting ore, sawing planks)
   GAME_SETTINGS_RefinementRateModifier: "4.0"
 
-  GAME_SETTINGS_DayStartHour: "10"
-  GAME_SETTINGS_DayEndHour: "14"
-  GAME_SETTINGS_CastleBloodEssenceDrainModifier: "0.2"
+  GAME_SETTINGS_GameTimeModifiers__DayStartHour: "10"
+  GAME_SETTINGS_GameTimeModifiers__DayEndHour: "14"
+
+  # Low decay rate and low blood essence drain rate means that the
+  # castle will decay and the blood essence will drain slower.
+  GAME_SETTINGS_CastleBloodEssenceDrainModifier: "0.01"
+  GAME_SETTINGS_CastleDecayRateModifier: "0.05"
 
 
 nodeSelector: {}
