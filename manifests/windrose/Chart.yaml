@@ -1,0 +1,6 @@
+apiVersion: v2
+name: Windrose Dedicated Server
+description: Windrose dedicated server running under Wine, exposed privately through Tailscale
+type: application
+version: 0.1.0
+appVersion: "latest"

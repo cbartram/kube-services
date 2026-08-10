@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+spec:
+  revisionHistoryLimit: 1
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- toYaml .Values.labels | nindent 6 }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- toYaml .Values.labels | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 60
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PUID
+              value: {{ .Values.server.puid | quote }}
+            - name: PGID
+              value: {{ .Values.server.pgid | quote }}
+            - name: TZ
+              value: {{ .Values.server.timezone | quote }}
+            - name: SERVER_NAME
+              value: {{ .Values.server.name | quote }}
+            - name: MAX_PLAYERS
+              value: {{ .Values.server.maxPlayers | quote }}
+            - name: UPDATE_ON_START
+              value: {{ .Values.server.updateOnStart | quote }}
+            - name: GENERATE_SETTINGS
+              value: {{ .Values.server.generateSettings | quote }}
+            - name: RUN_WORLD_DESCRIPTION_UPDATER
+              value: {{ .Values.server.runWorldDescriptionUpdater | quote }}
+            - name: WINE_VERBOSE
+              value: {{ .Values.server.wineVerbose | quote }}
+            - name: P2P_PROXY_ADDRESS
+              value: {{ .Values.server.p2pProxyAddress | quote }}
+            - name: USE_DIRECT_CONNECTION
+              value: {{ .Values.server.useDirectConnection | quote }}
+            {{- if .Values.server.useDirectConnection }}
+            - name: SERVER_PORT
+              value: {{ .Values.server.port.game | quote }}
+            - name: DIRECT_CONNECTION_PROXY_ADDRESS
+              value: {{ .Values.server.directConnectionProxyAddress | quote }}
+            {{- else }}
+            - name: INVITE_CODE
+              value: {{ required "server.inviteCode is required when server.useDirectConnection is false" .Values.server.inviteCode | quote }}
+            {{- end }}
+            {{- with .Values.server.region }}
+            - name: USER_SELECTED_REGION
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if .Values.server.passwordSecret.enabled }}
+            - name: SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.server.passwordSecret.name }}
+                  key: {{ .Values.server.passwordSecret.key }}
+            {{- end }}
+            - name: UE4SS_ENABLED
+              value: {{ .Values.mods.ue4ss | quote }}
+            - name: WINDROSE_PLUS_ENABLED
+              value: {{ .Values.windrosePlus.enabled | quote }}
+            {{- if .Values.windrosePlus.enabled }}
+            {{- with .Values.windrosePlus.version }}
+            - name: WINDROSE_PLUS_VERSION
+              value: {{ . | quote }}
+            {{- end }}
+            - name: WINDROSE_PLUS_DASHBOARD_PORT
+              value: {{ .Values.windrosePlus.dashboardPort | quote }}
+            {{- if .Values.windrosePlus.rconPasswordSecret.enabled }}
+            - name: WINDROSE_PLUS_RCON_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.windrosePlus.rconPasswordSecret.name }}
+                  key: {{ .Values.windrosePlus.rconPasswordSecret.key }}
+            {{- end }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- range $name, $value := . }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+          ports:
+            - name: game-tcp
+              containerPort: {{ .Values.server.port.game }}
+              protocol: TCP
+            - name: game-udp
+              containerPort: {{ .Values.server.port.game }}
+              protocol: UDP
+            {{- if .Values.windrosePlus.enabled }}
+            - name: dashboard
+              containerPort: {{ .Values.windrosePlus.dashboardPort }}
+              protocol: TCP
+            {{- end }}
+          volumeMounts:
+            - name: server
+              mountPath: /home/steam/server-files
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: server
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.server.claimName }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

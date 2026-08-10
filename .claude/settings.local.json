@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(helm version *)",
+      "Bash(helm lint *)",
+      "Bash(helm template *)",
+      "Bash(kubectl get *)",
+      "Bash(helm list *)",
+      "Bash(kubectl -n tailscale get pods -o custom-columns='POD:.metadata.name,IMAGE:.spec.containers[*].image')",
+      "Bash(helm get *)",
+      "Bash(helm repo *)",
+      "Bash(curl -s https://pkgs.tailscale.com/helmcharts/index.yaml)",
+      "Bash(curl -s https://pkgs.tailscale.com/stable/)",
+      "Bash(awk '{print $2}')",
+      "WebFetch(domain:tailscale.com)"
+    ]
+  }
+}

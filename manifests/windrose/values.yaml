@@ -1,0 +1,111 @@
+name: windrose
+namespace: windrose
+
+labels:
+  app.kubernetes.io/name: windrose
+  app.kubernetes.io/instance: windrose
+
+image:
+  repository: indifferentbroccoli/windrose-server-docker
+  tag: latest
+  pullPolicy: IfNotPresent
+
+server:
+  name: "Windrose Kubernetes"
+  maxPlayers: 4
+
+  # Direct connection means players join with <tailscale-ip>:7777 rather than an
+  # invite code. Set to false to use inviteCode instead, in which case the game's
+  # ICE/P2P relay is used and the Service below is not part of the connection path.
+  useDirectConnection: true
+
+  # Only used when useDirectConnection is false. Min 6 characters, 0-9 a-z A-Z, case sensitive.
+  inviteCode: ""
+
+  # Region for the invite code connection service. SEA, CIS, EU, or empty to auto select.
+  region: ""
+
+  # Bind address for the direct connection proxy. 0.0.0.0 so the Tailscale proxy pods can reach it.
+  directConnectionProxyAddress: "0.0.0.0"
+
+  # The P2P proxy is an internal socket and does not need to be reachable from outside the pod.
+  p2pProxyAddress: "127.0.0.1"
+
+  passwordSecret:
+    # The server is only reachable from the tailnet, so the password is optional.
+    # Set to false to run without one.
+    enabled: true
+    name: windrose-secret
+    key: server-password
+
+  port:
+    # Direct connection port. Requires both TCP and UDP.
+    game: 7777
+
+  # Validate the server files with SteamCMD on every pod start.
+  updateOnStart: true
+
+  # Let the container generate and patch ServerDescription.json from these values.
+  # Set to false to hand edit the file on the PVC instead.
+  generateSettings: true
+
+  # Run R5WorldDescriptionUpdater.exe at startup to apply WorldDescription.json edits.
+  runWorldDescriptionUpdater: false
+
+  # Enables WINEDEBUG=+all. Only useful when diagnosing Wine crashes, it is very noisy.
+  wineVerbose: false
+
+  timezone: "America/New_York"
+  puid: 1000
+  pgid: 1000
+
+mods:
+  # UE4SS Lua scripting framework. Not needed when windrosePlus.enabled is true,
+  # Windrose+ installs and manages its own compatible version.
+  ue4ss: false
+
+# Windrose+ adds a web RCON dashboard, live map, multipliers, and Lua mod support.
+# https://github.com/humangenome/WindrosePlus
+windrosePlus:
+  enabled: false
+  # GitHub release tag, e.g. v1.2.3. Empty uses the version baked into the image.
+  version: ""
+  dashboardPort: 8780
+  rconPasswordSecret:
+    # Only applied on first boot, before windrose_plus.json exists. After that the
+    # password is read live from that file on the PVC.
+    enabled: false
+    name: windrose-secret
+    key: rcon-password
+
+persistence:
+  storageClassName: longhorn
+  server:
+    claimName: windrose-server
+    size: 35Gi
+
+tailscale:
+  hostname: windrose
+  proxyGroupName: windrose-ingress
+  proxyReplicas: 2
+
+# The container runs the server as PUID/PGID, so the volume has to be group writable by it.
+podSecurityContext:
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+
+resources:
+  requests:
+    memory: 10Gi
+    cpu: 2000m
+  limits:
+    memory: 12Gi
+    cpu: 2000m
+
+# World tuning lives in WorldDescription.json on the PVC, not in environment variables.
+# See the README for how to edit it.
+extraEnv: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

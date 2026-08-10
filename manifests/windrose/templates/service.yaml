@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+  annotations:
+    tailscale.com/hostname: {{ .Values.tailscale.hostname | quote }}
+    tailscale.com/proxy-group: {{ .Values.tailscale.proxyGroupName | quote }}
+    tailscale.com/expose: "true"
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  ports:
+    - name: game-tcp
+      port: {{ .Values.server.port.game }}
+      targetPort: {{ .Values.server.port.game }}
+      protocol: TCP
+    - name: game-udp
+      port: {{ .Values.server.port.game }}
+      targetPort: {{ .Values.server.port.game }}
+      protocol: UDP
+    {{- if .Values.windrosePlus.enabled }}
+    - name: dashboard
+      port: {{ .Values.windrosePlus.dashboardPort }}
+      targetPort: {{ .Values.windrosePlus.dashboardPort }}
+      protocol: TCP
+    {{- end }}
+  selector:
+    {{- toYaml .Values.labels | nindent 4 }}
