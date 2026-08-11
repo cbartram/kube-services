@@ -108,6 +108,8 @@ Bring up a throwaway pod that mounts the same claim, edit the file, then scale b
 
 `ServerDescription.json` in `/home/steam/server-files/R5/` is regenerated from the chart values on every start while `server.generateSettings` is `true`. Set it to `false` if you want to hand manage that file on the volume instead.
 
+To move an existing world from someone's PC onto this server, see [WORLD-MIGRATION.md](WORLD-MIGRATION.md).
+
 ## Windrose+ (optional)
 
 [Windrose+](https://github.com/humangenome/WindrosePlus) adds a web RCON dashboard, a live map, multipliers, and Lua mod support, and it pulls in UE4SS automatically. Set `windrosePlus.enabled: true` and the chart publishes the dashboard on `8780/TCP` through the same Tailscale service. Grant `tcp:8780` on `tag:windrose` in the tailnet policy before using it.
