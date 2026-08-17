@@ -47,7 +47,7 @@ server:
 
   # Let the container generate and patch ServerDescription.json from these values.
   # Set to false to hand edit the file on the PVC instead.
-  generateSettings: true
+  generateSettings: false
 
   # Run R5WorldDescriptionUpdater.exe at startup to apply WorldDescription.json edits.
   runWorldDescriptionUpdater: false
