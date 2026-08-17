@@ -8,6 +8,8 @@
 *.so
 *.dylib
 
+settings.local.json
+
 .idea
 *.iml
 .DS_Store
