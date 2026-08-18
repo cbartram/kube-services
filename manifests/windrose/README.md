@@ -50,7 +50,7 @@ kubectl create namespace windrose
 kubectl -n windrose create secret generic windrose-secret --from-literal=server-password="replace-with-a-password"
 ```
 
-Set `server.passwordSecret.enabled: false` to run a passwordless server instead. That is reasonable here because reaching the server already requires being on the tailnet and matching the `tag:windrose` grant.
+Set `server.passwordSecret.enabled: false` to run a passwordless server instead. That is reasonable here because reaching the server already requires being on the tailnet and matching the `svc:windrose` grant. It does not, however, cover the LAN-reachable NodePort noted under Tailscale Notes.
 
 Install or upgrade the chart:
 
@@ -112,7 +112,7 @@ To move an existing world from someone's PC onto this server, see [WORLD-MIGRATI
 
 ## Windrose+ (optional)
 
-[Windrose+](https://github.com/humangenome/WindrosePlus) adds a web RCON dashboard, a live map, multipliers, and Lua mod support, and it pulls in UE4SS automatically. Set `windrosePlus.enabled: true` and the chart publishes the dashboard on `8780/TCP` through the same Tailscale service. Grant `tcp:8780` on `tag:windrose` in the tailnet policy before using it.
+[Windrose+](https://github.com/humangenome/WindrosePlus) adds a web RCON dashboard, a live map, multipliers, and Lua mod support, and it pulls in UE4SS automatically. Set `windrosePlus.enabled: true` and the chart publishes the dashboard on `8780/TCP` through the same Tailscale service. Grant `tcp:8780` on `svc:windrose` in the tailnet policy before using it.
 
 Set `windrosePlus.rconPasswordSecret.enabled: true` with a `rcon-password` key in the Secret to control the dashboard login. That only takes effect on the very first boot, before `windrose_plus.json` exists. After that the password is read live from that file on the PVC.
 
@@ -129,6 +129,22 @@ The Tailscale Kubernetes Operator must already be installed. The operator must a
 - `tailscale.com/hostname`
 - `tailscale.com/proxy-group`
 
-The tailnet policy needs `tag:windrose` in `tagOwners` and `autoApprovers`, plus a grant from `group:friends` to `tag:windrose` on `tcp:7777` and `udp:7777`. See `../tailscale/policy.hujson`.
+Because the service carries the `tailscale.com/proxy-group` annotation, the operator exposes it as a **Tailscale Service** rather than as a tagged device. The status reports `ipMode: VIP` with a virtual IP and the MagicDNS name:
 
-The chart intentionally does not create NodePorts, use host networking, or expose the service publicly.
+```bash
+kubectl get svc windrose -n windrose -o jsonpath='{.status.loadBalancer.ingress[0]}'
+```
+
+The tailnet policy therefore needs two separate things, and granting only the first lets nobody in:
+
+- `tag:windrose` in `tagOwners` and in `autoApprovers.services`, which is what allows the ProxyGroup pods to advertise the Service.
+- a grant from `group:friends` to **`svc:windrose`** on `tcp:7777` and `udp:7777`, which is what allows players to reach it. A grant to `tag:windrose` only covers the ProxyGroup pods' own tailnet addresses, where nothing is listening, since the pods only DNAT the virtual IP to the ClusterIP.
+
+See `../tailscale/policy.hujson`. To confirm a grant is actually on the game path, dump the compiled packet filter from a proxy pod and look for a rule whose destination is the virtual IP:
+
+```bash
+kubectl exec -n tailscale windrose-ingress-0 -- tailscale debug netmap \
+  | python3 -c "import json,sys;print(json.dumps(json.load(sys.stdin)['PacketFilterRules'],indent=1))"
+```
+
+The chart does not use host networking and does not expose the service publicly. It does leave `allocateLoadBalancerNodePorts` at its default, so the Service also holds a NodePort reachable from the LAN; set it to `false` on the Service to close that off.

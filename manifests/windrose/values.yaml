@@ -33,7 +33,8 @@ server:
 
   passwordSecret:
     # The server is only reachable from the tailnet, so the password is optional.
-    # Set to false to run without one.
+    # Set to false to run without one. Note the Service also holds a NodePort by
+    # default, which is reachable from the LAN.
     enabled: true
     name: windrose-secret
     key: server-password
